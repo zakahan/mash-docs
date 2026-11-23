@@ -1,6 +1,6 @@
 # 对话调用接口
 
-本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。
+本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。绑定字段的 camelCase 命名仍在开发中，状态见[会话管理接口](app.md)。
 
 ## POST /run {#post-runagent}
 
@@ -82,7 +82,7 @@ Content-Type: application/json
 
 请求体
 
-- `harness_version` · integer · 可选 — 续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 refresh_snapshot: true 互斥。
+- `harnessVersion` · integer · 可选 — 续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 refresh_snapshot: true 互斥。
 - `refresh_snapshot` · boolean · 可选 · 默认值 false — 传 true 时，用原绑定获取最新 Harness 和当前 Environment，成功后持久化实际版本、替换快照并执行本轮。字符串和 null 返回 422。
 - `harness` · object · 可选 设置本轮 Harness Agent 使用的模型、指令和工具。
 - `harness.model_name` · string · 可选 — 模型名称；绑定会话省略时沿用快照，未绑定时沿用部署配置。
@@ -190,7 +190,7 @@ resources · array · 可选。结构见同页的顶层资源字段。
 - `newMessage.parts[].audioTranscription.words[].endOffset` · string or null · 可选 — 相对音频开始的结束偏移。
 - `appName` · string or null · 可选 — 应为 harness_agent；兼容输入 app_name。
 - `streaming` · boolean · 可选 — 是否要求模型流式生成。请求级 Harness 适配器在省略时选择流式；建议调用方显式传值。
-- `stateDelta` · object or null · 可选 — 本轮执行前合并到 Session 的状态增量；兼容输入 state_delta。不得修改三个绑定 ID 或 harness_version。
+- `stateDelta` · object or null · 可选 — 本轮执行前合并到 Session 的状态增量；兼容输入 state_delta。不得修改三个绑定 ID 或 harnessVersion。
 - `functionCallEventId` · string or null · 可选 — 续接函数调用时对应的事件 ID。
 - `invocationId` · string or null · 可选 — 调用标识；省略时由服务端生成。
 - `customMetadata` · object or null · 可选 — 调用方自定义元数据。
@@ -226,10 +226,10 @@ resources · array · 可选。结构见同页的顶层资源字段。
 
 ```json
 {
-  "app_name": "harness_agent",
-  "user_id": "reader-1",
-  "session_id": "report-1",
-  "new_message": {
+  "appName": "harness_agent",
+  "userId": "reader-1",
+  "sessionId": "report-1",
+  "newMessage": {
     "role": "user",
     "parts": [{"text": "总结本周报告。"}]
   },
@@ -265,9 +265,9 @@ data: {"partial":false,"content":{"parts":[{"text":"甲乙"}]}}
 
 | 本轮请求 | App 的处理方式 |
 |---|---|
-| 省略 `refresh_snapshot` 或传 `false` | 使用 Session 固定版本对应的快照。实例内没有匹配缓存时，按 `state.harness_version` 自动查询历史版本并重建，然后执行本轮；不会升级到最新版本。 |
+| 省略 `refresh_snapshot` 或传 `false` | 使用 Session 固定版本对应的快照。实例内没有匹配缓存时，按 `state.harnessVersion` 自动查询历史版本并重建，然后执行本轮；不会升级到最新版本。 |
 | 传 `refresh_snapshot: true` | 用已保存的三个 ID 查询最新 Harness 和当前 Environment，校验成功后先持久化实际版本，再替换快照并执行消息。任一步失败都保留原版本和原快照，本轮在建连前结束。未绑定会话请求刷新返回 409。 |
-| 显式提供 `harness_version` | 仅用于断言版本，必须是正整数并与 Session 固定版本相同。不能切换版本，也不能与 `refresh_snapshot: true` 同时提供；冲突返回 422。 |
+| 显式提供 `harnessVersion` | 仅用于断言版本，必须是正整数并与 Session 固定版本相同。不能切换版本，也不能与 `refresh_snapshot: true` 同时提供；冲突返回 422。 |
 | 提供 `harness` | 在本轮使用的快照上应用显式字段，省略的字段继承快照。sandbox、knowledgebase 对象按子字段合并，数组整体替换。若同时刷新，先取新快照。请求覆盖只对本轮有效。 |
 | 覆盖模型地址且快照含密钥 | 若 `harness.model_api_base` 与快照不同，必须显式提供本轮凭证，优先使用 `X-Model-API-Key`。即使快照已有密钥，省略本轮凭证也会在建连前返回 422。 |
 
@@ -688,10 +688,10 @@ A2A 消息调用 · `message/send`
 | `params.configuration.historyLength` | integer | Body | 否 | 省略时按 SDK 默认行为返回历史。返回历史消息数量；0 不返回历史，不删除内部历史。 |
 | `params.configuration.acceptedOutputModes` | string[] | Body | 否 | 标准 A2A 字段；适配器没有额外实现输出格式协商。 |
 | `params.metadata` | object | Body | 首轮条件必填 | Harness 绑定字段放在这里，不放在 message.metadata。首轮必须提供三个 ID；续聊不刷新时可省略。 |
-| `params.metadata.workspace_id` | string | Body | 首轮必填 | 资源所属 Workspace；三个 ID 必须一起提供。 |
-| `params.metadata.harness_id` | string | Body | 首轮必填 | 在该 Workspace 内读取的 Harness ID。 |
-| `params.metadata.harness_version` | integer | Body | 否 | 首轮可指定正整数版本，省略时选择最新；续聊提供时必须与固定版本一致。与 `refresh_snapshot: true` 互斥。 |
-| `params.metadata.environment_id` | string | Body | 首轮必填 | 同一 Workspace 下的 Active Cloud Environment ID。 |
+| `params.metadata.workspaceId` | string | Body | 首轮必填 | 资源所属 Workspace；三个 ID 必须一起提供。 |
+| `params.metadata.harnessId` | string | Body | 首轮必填 | 在该 Workspace 内读取的 Harness ID。 |
+| `params.metadata.harnessVersion` | integer | Body | 否 | 首轮可指定正整数版本，省略时选择最新；续聊提供时必须与固定版本一致。与 `refresh_snapshot: true` 互斥。 |
+| `params.metadata.environmentId` | string | Body | 首轮必填 | 同一 Workspace 下的 Active Cloud Environment ID。 |
 | `params.metadata.refresh_snapshot` | boolean | Body | 否 | 默认 false。续聊传 true 时按原绑定升级到最新 Harness 并持久化版本；首轮不接受 true。 |
 | `params.metadata.judge` | boolean | Body | 否 | 默认 false。Harness 扩展：开启沙箱产物收集能力。必须使用 adk runtime 且配置 sandbox.tool_id（本轮或部署配置）；执行时要求恰好一个 AIO sandbox toolset。字符串和 null 均不合法。 |
 
@@ -748,10 +748,10 @@ Content-Type: application/json
     },
     "configuration": {"blocking": true, "historyLength": 0},
     "metadata": {
-      "workspace_id": "<workspace-id>",
-      "harness_id": "<harness-id>",
-      "harness_version": 1,
-      "environment_id": "<environment-id>",
+      "workspaceId": "<workspace-id>",
+      "harnessId": "<harness-id>",
+      "harnessVersion": 1,
+      "environmentId": "<environment-id>",
       "judge": false
     }
   }

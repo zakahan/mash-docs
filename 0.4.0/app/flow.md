@@ -2,7 +2,7 @@
 
 本教程带你完成一次可验证的 Harness App 接入：在控制面创建 Harness，在 Runtime 创建绑定会话，通过 `/run_sse` 获得模型回复，再用同一个会话继续追问、读取历史和刷新配置。沙箱、Skill 和 MCP 都是在这条主链路上增加能力，不是另外三套接入方式。
 
-本文适用于 **0.3.1 的 ADK、服务认证部署**。
+本文适用于 **0.4.0 的 ADK、服务认证部署**；绑定字段的 camelCase 命名仍在开发中，当前 `release/v0.4` 实现尚未接受本页的新字段名。
 
 ## 先看完整链路
 
@@ -13,7 +13,7 @@
 | 阶段 | 调用方做什么 | Harness App 做什么 | 成功后能观察到什么 |
 | --- | --- | --- | --- |
 | 定义配置 | 调用 `CreateHarness` | 控制面保存模型、指令及可选能力 | 返回 `HarnessId` 和 `HarnessVersion` |
-| 建立会话 | 将 Workspace、Harness、Environment 三个 ID 传给 Session 接口，可选指定 Harness 历史版本 | 读取 Harness 和 Cloud Environment，将三个 ID 和实际 Harness 版本持久化到 Session state，将配置保存在当前实例快照 | Session 响应回显绑定 ID 和 `harness_version` |
+| 建立会话 | 将 Workspace、Harness、Environment 三个 ID 传给 Session 接口，可选指定 Harness 历史版本 | 读取 Harness 和 Cloud Environment，将三个 ID 和实际 Harness 版本持久化到 Session state，将配置保存在当前实例快照 | Session 响应回显绑定 ID 和 `harnessVersion` |
 | 执行对话 | 向 `/run_sse` 发送用户消息 | 从快照创建本轮 Agent，由 Runner 调用模型及可选工具 | SSE 依次返回文本、工具活动、最终消息或错误 |
 | 延续对话 | 复用 `userId` 和 `sessionId` | 从会话后端读取历史 | 追问可以使用前文，详情接口返回两轮事件 |
 | 更新配置 | 更新 Harness，并在下一条消息设置 `refresh_snapshot: true` | 读取最新 Harness 和当前 Environment，先持久化新版本，再替换快照 | 回复体现新配置，后续请求固定使用新版本 |
@@ -105,7 +105,7 @@ jq -n \
   --arg workspace "$WORKSPACE_ID" \
   --arg harness "$HARNESS_ID" \
   --arg environment "$ENVIRONMENT_ID" \
-  '{workspace_id:$workspace,harness_id:$harness,environment_id:$environment}' \
+  '{workspaceId:$workspace,harnessId:$harness,environmentId:$environment}' \
   > create-session.json
 
 curl --fail-with-body -sS \
@@ -128,16 +128,16 @@ export SESSION_ID=$(jq -er '.id' session.json)
   "appName": "harness_agent",
   "userId": "tutorial-user",
   "state": {
-    "workspace_id": "<WORKSPACE_ID>",
-    "harness_id": "<HARNESS_ID>",
-    "harness_version": 1,
-    "environment_id": "<ENVIRONMENT_ID>"
+    "workspaceId": "<WORKSPACE_ID>",
+    "harnessId": "<HARNESS_ID>",
+    "harnessVersion": 1,
+    "environmentId": "<ENVIRONMENT_ID>"
   },
   "events": []
 }
 ```
 
-**验收：** `id` 非空，`appName` 和 `userId` 与请求一致，`state` 中的三个绑定 ID 与请求完全一致，`harness_version` 是正整数。请求虽然没有指定版本，服务仍会把创建时实际读取到的版本写入 Session。完整返回结构见[创建会话](../api/app.md#post-createsession)。
+**验收：** `id` 非空，`appName` 和 `userId` 与请求一致，`state` 中的三个绑定 ID 与请求完全一致，`harnessVersion` 是正整数。请求虽然没有指定版本，服务仍会把创建时实际读取到的版本写入 Session。完整返回结构见[创建会话](../api/app.md#post-createsession)。
 
 如果 `session-headers.txt` 含 `X-Session-Id`，保存这个路由头，并在后续请求中原样回传。下面的数组会在有值时自动附带它。
 
@@ -149,7 +149,7 @@ if [ -n "$AFFINITY" ]; then
 fi
 ```
 
-创建过程中，Harness App 读取 Harness 和 Environment。三个绑定 ID 和实际 `harness_version` 随 ADK Session 保存，模型、提示词、MCP、Skill 和沙箱配置组成当前实例的内存快照。后续普通消息固定使用这个版本；实例快照丢失时，服务按持久化版本自动重建。
+创建过程中，Harness App 读取 Harness 和 Environment。三个绑定 ID 和实际 `harnessVersion` 随 ADK Session 保存，模型、提示词、MCP、Skill 和沙箱配置组成当前实例的内存快照。后续普通消息固定使用这个版本；实例快照丢失时，服务按持久化版本自动重建。
 
 应用已有稳定的业务会话 ID 时，也可以使用带路径 ID 的创建入口。该入口直接接收初始状态对象，具体示例见[按指定 ID 创建会话](../api/app.md#post-createsessionwithid)。
 
@@ -249,7 +249,7 @@ curl --fail-with-body -sS \
 }
 ```
 
-更新成功后，`Result.HarnessVersion` 应从 `1` 变为 `2`，并回显新的 `System`。保存新版本号。更新只产生新的控制面修订，不会修改已有 Session 固定的 `harness_version`；只有调用方显式刷新，Session 才会采用最新版本。[UpdateHarness](../api/harness.md#updateharness-top)
+更新成功后，`Result.HarnessVersion` 应从 `1` 变为 `2`，并回显新的 `System`。保存新版本号。更新只产生新的控制面修订，不会修改已有 Session 固定的 `harnessVersion`；只有调用方显式刷新，Session 才会采用最新版本。[UpdateHarness](../api/harness.md#updateharness-top)
 
 ```json
 {
@@ -289,7 +289,7 @@ curl --fail-with-body -sS -N \
 data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[{"text":"【更新配置】本周处理了 120 笔订单。"}]}}
 ```
 
-**验收新版本：** 最终完整消息以【更新配置】开头，并正确回答本周为 120 笔。前者证明新配置已影响模型，后者证明刷新没有创建新对话或丢失历史。再次查询 Session 时，`state.harness_version` 应为 `2`；此后省略刷新字段也会固定使用 v2。输出标记适合观察行为，精确诊断时需结合 Session state 和服务日志。
+**验收新版本：** 最终完整消息以【更新配置】开头，并正确回答本周为 120 笔。前者证明新配置已影响模型，后者证明刷新没有创建新对话或丢失历史。再次查询 Session 时，`state.harnessVersion` 应为 `2`；此后省略刷新字段也会固定使用 v2。输出标记适合观察行为，精确诊断时需结合 Session state 和服务日志。
 
 | 请求时机 | 使用的配置 |
 | --- | --- |
