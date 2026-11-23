@@ -61,106 +61,112 @@
         "api/conventions",
         {
           "type": "category",
-          "label": "会话管理接口",
-          "link": {
-            "type": "doc",
-            "id": "api/app"
-          },
+          "label": "Harness App 调用接口",
           "items": [
             {
-              "type": "link",
-              "label": "查询会话列表",
-              "href": "/0.4.0/api/app#get-listsessions"
+              "type": "category",
+              "label": "会话管理接口",
+              "link": {
+                "type": "doc",
+                "id": "api/app"
+              },
+              "items": [
+                {
+                  "type": "link",
+                  "label": "查询会话列表",
+                  "href": "/0.4.0/api/app#get-listsessions"
+                },
+                {
+                  "type": "link",
+                  "label": "创建会话",
+                  "href": "/0.4.0/api/app#post-createsession"
+                },
+                {
+                  "type": "link",
+                  "label": "使用指定 ID 创建会话",
+                  "href": "/0.4.0/api/app#post-createsessionwithid"
+                },
+                {
+                  "type": "link",
+                  "label": "查询会话详情",
+                  "href": "/0.4.0/api/app#get-getsession"
+                },
+                {
+                  "type": "link",
+                  "label": "更新会话状态",
+                  "href": "/0.4.0/api/app#patch-updatesession"
+                },
+                {
+                  "type": "link",
+                  "label": "删除会话",
+                  "href": "/0.4.0/api/app#delete-deletesession"
+                }
+              ]
             },
             {
-              "type": "link",
-              "label": "创建会话",
-              "href": "/0.4.0/api/app#post-createsession"
+              "type": "category",
+              "label": "对话调用接口",
+              "link": {
+                "type": "doc",
+                "id": "api/chat"
+              },
+              "items": [
+                {
+                  "type": "link",
+                  "label": "运行对话",
+                  "href": "/0.4.0/api/chat#post-runagent"
+                },
+                {
+                  "type": "link",
+                  "label": "流式运行对话 [推荐]",
+                  "href": "/0.4.0/api/chat#post-runagentsse"
+                },
+                {
+                  "type": "link",
+                  "label": "简化流式调用",
+                  "href": "/0.4.0/api/chat#post-invoke"
+                },
+                {
+                  "type": "link",
+                  "label": "发现 A2A 服务",
+                  "href": "/0.4.0/api/chat#get-a2acard"
+                },
+                {
+                  "type": "link",
+                  "label": "A2A 消息调用",
+                  "href": "/0.4.0/api/chat#post-a2asend"
+                },
+                {
+                  "type": "link",
+                  "label": "A2A 流式消息",
+                  "href": "/0.4.0/api/chat#post-a2astream"
+                }
+              ]
             },
             {
-              "type": "link",
-              "label": "使用指定 ID 创建会话",
-              "href": "/0.4.0/api/app#post-createsessionwithid"
-            },
-            {
-              "type": "link",
-              "label": "查询会话详情",
-              "href": "/0.4.0/api/app#get-getsession"
-            },
-            {
-              "type": "link",
-              "label": "更新会话状态",
-              "href": "/0.4.0/api/app#patch-updatesession"
-            },
-            {
-              "type": "link",
-              "label": "删除会话",
-              "href": "/0.4.0/api/app#delete-deletesession"
-            }
-          ]
-        },
-        {
-          "type": "category",
-          "label": "对话调用接口",
-          "link": {
-            "type": "doc",
-            "id": "api/chat"
-          },
-          "items": [
-            {
-              "type": "link",
-              "label": "运行对话",
-              "href": "/0.4.0/api/chat#post-runagent"
-            },
-            {
-              "type": "link",
-              "label": "流式运行对话 [推荐]",
-              "href": "/0.4.0/api/chat#post-runagentsse"
-            },
-            {
-              "type": "link",
-              "label": "简化流式调用",
-              "href": "/0.4.0/api/chat#post-invoke"
-            },
-            {
-              "type": "link",
-              "label": "发现 A2A 服务",
-              "href": "/0.4.0/api/chat#get-a2acard"
-            },
-            {
-              "type": "link",
-              "label": "A2A 消息调用",
-              "href": "/0.4.0/api/chat#post-a2asend"
-            },
-            {
-              "type": "link",
-              "label": "A2A 流式消息",
-              "href": "/0.4.0/api/chat#post-a2astream"
-            }
-          ]
-        },
-        {
-          "type": "category",
-          "label": "文件操作接口",
-          "link": {
-            "type": "doc",
-            "id": "api/files"
-          },
-          "items": [
-            {
-              "type": "link",
-              "label": "上传文件",
-              "href": "/0.4.0/api/files#post-uploadsessionfile"
-            },
-            {
-              "type": "link",
-              "label": "列出文件",
-              "href": "/0.4.0/api/files#get-listsessionfiles"
-            },
-            {
-              "type": "link",
-              "label": "下载文件",
-              "href": "/0.4.0/api/files#get-downloadsessionfile"
+              "type": "category",
+              "label": "文件操作接口",
+              "link": {
+                "type": "doc",
+                "id": "api/files"
+              },
+              "items": [
+                {
+                  "type": "link",
+                  "label": "上传文件",
+                  "href": "/0.4.0/api/files#post-uploadsessionfile"
+                },
+                {
+                  "type": "link",
+                  "label": "列出文件",
+                  "href": "/0.4.0/api/files#get-listsessionfiles"
+                },
+                {
+                  "type": "link",
+                  "label": "下载文件",
+                  "href": "/0.4.0/api/files#get-downloadsessionfile"
+                }
+              ]
             }
           ]
         },
