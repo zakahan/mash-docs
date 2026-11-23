@@ -1,0 +1,43 @@
+# VeADK Agent Loop · 0.3.1
+
+> AgentKit Runtime 使用指南与 API 参考。
+
+## API 参考
+
+- [Harness App 调用接口](api/app.md)
+- [API 调用约定](api/conventions.md)
+- [Env 管理接口](api/environment.md)
+- [Agentkit:Harness 管理接口](api/harness.md)
+- [API 参考](api/index.md)
+- [Managed Agents API：Session 与事件](api/session.md)
+
+## Harness App
+
+- [高级配置与环境变量](app/advanced.md)
+- [文件与会话产物](app/artifacts.md)
+- [Harness App 调用配置](app/config.md)
+- [扩展 Harness App](app/develop.md)
+- [流式响应与事件消费](app/features.md)
+- [Harness App 实战教学](app/flow.md)
+- [Harness App 概览](app/guide.md)
+- [A2A 调用与定时任务](app/integrations.md)
+- [性能与指标](app/load-test.md)
+- [调用 MCP 工具](app/mcp.md)
+- [开始使用 Harness App](app/quickstart.md)
+- [在沙箱中执行任务](app/sandbox.md)
+- [会话状态、历史与快照恢复](app/sessions.md)
+- [使用 Skill 完成任务](app/skills.md)
+- [内置工具、MCP 与 Skills](app/tools.md)
+
+## 概览与版本
+
+- [概览](intro.md)
+- [版本说明](versions.md)
+
+## Managed Agents Worker
+
+- [配置 Harness 与会话](managed/config.md)
+- [开发 Managed Agents Worker](managed/develop.md)
+- [事件、状态与断线续读](managed/events.md)
+- [通过 Managed Agents 会话使用 Worker](managed/guide.md)
+- [工具、资源与多 Agent](managed/resources.md)

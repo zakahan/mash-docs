@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 475" role="img" aria-labelledby="title"><title id="title">首次调用与后续复用沙箱的时序</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#216d79"/></marker></defs><rect width="840" height="475" rx="12" fill="#f7fafb"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<rect x="26" y="20" width="208" height="44" rx="8" fill="#183849"/><text x="130" y="49" fill="white" font-size="19">Harness App · Runner</text><path d="M130 64 V450" stroke="#a6bcc5" stroke-dasharray="4 5"/>
+<rect x="314" y="20" width="208" height="44" rx="8" fill="#183849"/><text x="418" y="49" fill="white" font-size="19">AgentKit 控制面</text><path d="M418 64 V450" stroke="#a6bcc5" stroke-dasharray="4 5"/>
+<rect x="606" y="20" width="208" height="44" rx="8" fill="#183849"/><text x="710" y="49" fill="white" font-size="19">沙箱数据面</text><path d="M710 64 V450" stroke="#a6bcc5" stroke-dasharray="4 5"/>
+<text x="28" y="90" text-anchor="start" fill="#206b72" font-size="15">首次工具调用</text>
+<text x="28" y="330" text-anchor="start" fill="#206b72" font-size="15">后续调用 · 绑定有效</text>
+<path d="M130 130 H418" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="274" y="122" fill="#173745" font-size="16">CreateSession</text>
+<path d="M418 180 H130" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="274" y="172" fill="#173745" font-size="16">SessionId、Endpoint</text>
+<path d="M130 235 H710" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="420" y="227" fill="#173745" font-size="16">向 Endpoint 提交文件或 Bash 请求</text>
+<path d="M710 281 H130" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="420" y="273" fill="#173745" font-size="16">执行结果 → 模型继续回答</text>
+<path d="M130 375 H710" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="420" y="367" fill="#173745" font-size="16">复用 Endpoint，直接执行</text>
+<path d="M710 425 H130" stroke="#216d79" stroke-width="2" marker-end="url(#arrow)"/><text x="420" y="417" fill="#173745" font-size="16">返回工具结果</text>
+</g></svg>
