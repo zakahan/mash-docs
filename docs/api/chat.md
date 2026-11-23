@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # 对话调用接口
 
 本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。
@@ -8,7 +11,7 @@
 
 在已创建的会话中执行一次 Agent 并在执行完成后返回事件数组，适用于非流式调用。
 
-**请求参数**
+### 请求参数
 
 | 字段 | 类型 | 位置 | 必填 | 说明 |
 |-|-|-|-|-|
@@ -41,7 +44,16 @@
 | `invocationId` | string or null | Body | 否 | 调用标识；省略时由服务端生成。 |
 | `customMetadata` | object or null | Body | 否 | 调用方自定义元数据。 |
 
-**响应字段**
+### 调用示例
+
+```http
+POST /run
+Content-Type: application/json
+
+{"appName":"harness_agent","userId":"reader-1","sessionId":"report-1","newMessage":{"role":"user","parts":[{"text":"总结报告。"}]}}
+```
+
+### 响应字段
 
 | 字段 | 类型 | 位置 | 必返 | 说明 |
 |-|-|-|-|-|
@@ -61,15 +73,6 @@
 | `[].customMetadata` | object or null | Body | 否 | 自定义元数据。 |
 | `[].output` | any or null | Body | 否 | 节点输出。 |
 | `[].branch` | string or null | Body | 否 | 事件所属分支。 |
-
-**调用示例**
-
-```http
-POST /run
-Content-Type: application/json
-
-{"appName":"harness_agent","userId":"reader-1","sessionId":"report-1","newMessage":{"role":"user","parts":[{"text":"总结报告。"}]}}
-```
 
 先创建会话。返回完整的 ADK Event 数组，按顺序读取每个事件的 content.parts。
 

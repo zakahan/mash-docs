@@ -86,6 +86,33 @@
 .api-fields { margin-bottom: var(--ifm-leading); }
 .api-fields dl { margin: 0; }
 .api-fields :is(dt, dd, summary) { overflow-wrap: anywhere; }
+.api-table-scroll {
+  max-width: 100%;
+  margin: 1.25rem 0 1.7rem;
+  overflow-x: auto;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+}
+.api-table-scroll .api-summary-table {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  table-layout: auto;
+}
+.api-table-scroll .api-summary-table :is(th, td) {
+  padding: .62rem .78rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.api-table-scroll .api-summary-table th {
+  white-space: nowrap;
+}
+.api-table-scroll .api-summary-table :is(th, td) > code {
+  white-space: normal;
+}
+.api-table-wide .api-summary-table { min-width: 620px; }
+.api-table-compact .api-summary-table :first-child:is(th, td) { width: 26%; }
 :is(.api-contract, .api-fields, .api-contract-meta) :is(summary, dt) > code {
   color: var(--ifm-font-color-base);
   background: var(--ifm-color-emphasis-100);

@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # Env 管理接口
 
 本页收录环境管理、镜像构建与 Devbox 实例操作。取得 `EnvironmentId` 后，可在 [Harness 管理接口](harness.md) 中设置默认环境，也可在[创建托管会话](session.md#createagentsessionrest)时指定环境。各 Action 的适配与验证状态见对应小节。

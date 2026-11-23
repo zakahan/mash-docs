@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # Managed Agents API：Session 与事件
 
 本页描述与 Runtime 配套的 Session 接口契约。目标环境的接口可用性取决于控制面版本。

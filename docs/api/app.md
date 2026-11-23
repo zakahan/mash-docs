@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # 会话管理接口
 
 本页记录 0.4.0（待发布）的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。

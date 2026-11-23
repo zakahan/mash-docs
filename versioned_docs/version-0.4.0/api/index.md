@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # API 参考
 
 认证、响应包装、错误和幂等规则见[API 调用约定](conventions.md)。

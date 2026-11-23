@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # Agentkit:Harness 管理接口
 
 本页描述与 Runtime 配套的接口契约。目标环境的接口可用性取决于控制面版本。

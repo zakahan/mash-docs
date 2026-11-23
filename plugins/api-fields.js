@@ -48,6 +48,15 @@ function fieldList(table) {
   return element('div', roots.map(render), {className: ['api-fields']});
 }
 
+function presentTable(table) {
+  const fields = fieldList(table);
+  if (fields !== table) return fields;
+  const head = elements(table)[0];
+  const count = head ? elements(elements(head)[0] || {children: []}).length : 0;
+  table.properties.className = [...(table.properties.className || []), 'api-summary-table'];
+  return element('div', [table], {className: ['api-table-scroll', count >= 4 ? 'api-table-wide' : 'api-table-compact']});
+}
+
 // Keep the response fields in reading order while placing the request example
 // alongside its fields. Bound every lookup to the current operation.
 function placeExamples(nodes) {
@@ -94,7 +103,7 @@ function placeExamples(nodes) {
 
 module.exports = function apiFields() {
   return (tree, file) => {
-    if (!/\/api\/(app|session|harness|environment)\.md$/.test(file.path)) return;
-    tree.children = placeExamples(tree.children.map(node => node.tagName === 'table' ? fieldList(node) : node));
+    if (!/\/api\/(app|chat|files|session|harness|environment|conventions)\.md$/.test(file.path)) return;
+    tree.children = placeExamples(tree.children.map(node => node.tagName === 'table' ? presentTable(node) : node));
   };
 };
