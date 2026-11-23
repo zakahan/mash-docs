@@ -6,7 +6,7 @@ Harness App 是运行在 AgentKit Runtime 中的 Agent HTTP 服务。业务应�
 
 ![Harness App 架构：业务应用经 HTTP 入口调用 VeADK Runner，Runner 连接会话服务、模型服务和工具资源](/img/0.2.0/harness-app.png)
 
-图中展示请求进入 Runtime 后的执行关系。在 0.3.1 中，Agent 配置还可以从控制面的 Harness 与 Environment 读取，并绑定到 Session。控制面资源由应用预先创建，HTTP 服务在创建会话和显式刷新时读取它们。
+图中展示请求进入 Runtime 后的执行关系。从 0.3.1 起，Agent 配置可以从控制面的 Harness 与 Environment 读取，并绑定到 Session。控制面资源由应用预先创建，HTTP 服务在创建会话和显式刷新时读取它们。
 
 | 组成 | 职责 |
 | --- | --- |
@@ -45,7 +45,8 @@ Harness App 是运行在 AgentKit Runtime 中的 Agent HTTP 服务。业务应�
 
 | 文档 | 解决的问题 |
 | --- | --- |
-| [在沙箱中执行任务](sandbox.md) | 如何执行命令、读写文件，以及跨轮复用工作目录 |
+| [在沙箱中执行任务](sandbox.md) | 如何执行命令、读写文件与图片，以及跨轮复用工作目录 |
+| [会话文件接口](../api/files.md) | 如何直接上传、列出和下载沙箱中的文件 |
 | [使用 Skill 完成任务](skills.md) | 如何配置技能包、选择空间中的 Skill 和确认加载结果 |
 | [调用 MCP 工具](mcp.md) | 如何连接远程工具、配置认证和观察调用结果 |
 | [高级配置](advanced.md) | 如何选择模型协议、持久化会话和设置 Runtime 环境变量 |
@@ -53,6 +54,6 @@ Harness App 是运行在 AgentKit Runtime 中的 Agent HTTP 服务。业务应�
 | [API 参考](../api/app.md) | 请求参数、响应字段和错误处理的完整契约 |
 | [扩展 Harness App](develop.md) | 从服务入口追踪配置解析、Agent 组装与执行代码 |
 
-本文描述 **0.3.1**。会话绑定适用于服务认证部署和 Active Cloud Environment。多实例或重启后恢复历史需要持久化会话后端；内存快照缺失时由调用方显式刷新恢复。[版本说明](../versions.md)
+本文描述 **0.4.0**。会话绑定适用于服务认证部署和 Active Cloud Environment。多实例或重启后恢复历史需要持久化会话后端；实例会按会话固定版本自动重建内存快照；仍有效的物理沙箱可按会话标识重新附着。[版本说明](../versions.md)
 
 单实例下直接对话与沙箱工具的实测延迟和吞吐见[性能与指标](load-test.md)。

@@ -59,6 +59,22 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 
 **验收：** 工具结果的 `status` 为 `ok`、标准输出包含 `200`，最终回复与工具结果一致。第二轮没有重新上传文件，因此成功读到数据也验证了同一会话下的沙箱复用。工具选择由模型决定，本文的文件内容和计算结果才是稳定的验收目标。
 
+## 读取沙箱图片并交给视觉模型
+
+在 **0.4.0** 中，ADK 的 `ReadFile` 可读取沙箱中的 PNG、JPEG、WebP 和 GIF 图片。把图片放在工作目录后，让模型调用 `ReadFile` 并提供文件路径；工具依据扩展名判断图片类型，再核对实际文件签名。只有类型一致且内容不超过 **5 MiB** 时，工具才返回 `status: ok` 和 `content` 中的 base64 图片块。图片不支持 `start_line`、`end_line` 行范围；类型不符、超限、文件不存在等情况在工具结果中返回 `status: error`。
+
+```json
+{"path":"/home/gem/chart.png"}
+```
+
+成功的 `functionResponse.response` 形态如下，`data` 是实际图片字节的 base64；这里用占位文本表示，不应按字面发送：
+
+```json
+{"status":"ok","content":[{"type":"image","source":{"type":"base64","media_type":"image/png","data":"<base64-image-bytes>"}}]}
+```
+
+Harness Chat 和 OBO 的 Chat Completions 模型调用会把工具图片转换为后续视觉输入。转换只影响送给模型的请求副本；会话事件仍保留原始工具响应。调用方消费 SSE 或读取历史时应按工具响应结构处理图片，避免把大段 base64 直接渲染为文本。是否生成图片解读还取决于所选模型的视觉能力。
+
 ## 绑定会话如何取得沙箱 Tool
 
 在 [创建到对话的流程](flow.md) 中，`environment_id` 指向与 Harness 同一 Workspace 的 Active Cloud Environment。App 以服务身份调用 `GetEnvironment`，将返回的 `ToolId` 写入实例快照的 `sandbox.tool_id`。SelfHosted Environment 和缺少 ToolId 的配置在解析阶段返回 422。后续普通消息使用快照；若只想调整本轮 TTL，可以传 `"harness":{"sandbox":{"ttl":3600}}`，保留快照的 ToolId。
@@ -82,7 +98,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 ![首次沙箱调用经过AgentKit 控制面获取地址，后续工具操作直接访问沙箱数据面](/img/0.2.0/harness-sandbox-call.svg)
 
 1. **向模型提供工具。** Harness App 按部署配置及入口允许的请求参数准备 Harness Agent。启用 AIO 后，工具集给模型提供四个工具的名称和参数声明。若配置 Skill，准备模型请求时还可读取技能目录信息。
-2. **从对话定位 Endpoint。** 模型发起沙箱工具调用后，执行器从工具上下文读取应用、用户和会话，在进程内串行处理同一绑定。首次调用向 AgentKit 控制面发送 `CreateSession`，参数包括 `ToolId`、`UserSessionId` 和 `Ttl`；取得可用 Endpoint 后缓存。
+2. **从对话定位 Endpoint。** 模型发起沙箱工具调用后，执行器从工具上下文读取应用、用户和会话，在进程内串行处理同一绑定。首次使用时先按稳定的 `UserSessionId` 查询仍有效的沙箱；没有匹配项才向 AgentKit 控制面发送 `CreateSession`，参数包括 `ToolId`、`UserSessionId` 和 `Ttl`。取得可用 Endpoint 后缓存。
 3. **把操作发到沙箱数据面。** 读取文本走 `/v1/file/read`，写入走 `/v1/file/write`。执行命令时，适配器先在工作目录创建 Bash 会话，再向 `/v1/bash/exec` 提交命令；需要等待时读取命令输出，最后取得标准输出、标准错误和退出码。文件路径相对于沙箱工作目录解析。调用方机器上的同名文件不会自动出现在该目录。
 4. **继续模型执行。** 原生 ADK 工具将结果交回 Runner。模型可继续选工具，也可生成回答。前端沿原来的 Harness App 连接消费[流式事件](features.md)，无需自行构造沙箱 HTTP 请求。
 
@@ -94,7 +110,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 | 创建请求结果不确定 | 保留逻辑标识，后续可用 ListSessions 回查，避免因超时而重复创建。 |
 | Endpoint 疑似失效 | 通过 GetSession 核实已有沙箱。文件读取返回 404 本身不足以证明整个沙箱已消失。 |
 | 已知 TTL 到期 | 再次使用工具时创建新沙箱。同一对话可以继续，但此前沙箱内的临时文件可能已经不可用。 |
-| Runtime 重启或请求切换到其他副本 | 进程内绑定无法直接复用。共享数据库可以恢复对话历史；需要跨轮继续操作同一工作目录时，还应考虑会话路由与沙箱 TTL。 |
+| Runtime 重启或请求切换到其他副本 | 进程内绑定丢失后，会按稳定的 UserSessionId 查询仍有效的物理沙箱并重新附着。会话历史仍依赖持久化后端；沙箱已过期或被删除时旧文件不可恢复。 |
 
 ### 读懂权限错误
 
