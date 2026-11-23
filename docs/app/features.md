@@ -3,8 +3,8 @@
 `POST /run_sse` 接收 ADK 消息，返回 `text/event-stream`。对已有会话发送下面的请求，将标识替换为当前应用和会话的实际值。
 
 ```json
-{"app_name":"harness_agent","user_id":"reader-1","session_id":"reading-1",
- "new_message":{"role":"user","parts":[{"text":"概括这份报告。"}]},"streaming":true}
+{"appName":"harness_agent","userId":"reader-1","sessionId":"reading-1",
+ "newMessage":{"role":"user","parts":[{"text":"概括这份报告。"}]},"streaming":true}
 ```
 
 ## 临时文本和完整消息

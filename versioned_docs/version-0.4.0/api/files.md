@@ -9,7 +9,7 @@ toc_max_heading_level: 2
 
 相对文件路径以沙箱工作目录为基准，默认是 `/home/gem`；绝对路径原样使用并规范化。路径中不能包含 NUL 或控制字符。文件接口会在首次操作时取得沙箱 Endpoint；实例重启后会按会话标识查找仍有效的物理沙箱并重新附着。沙箱已过期时可能创建新沙箱，旧文件随旧沙箱失效。同一会话正在执行其他沙箱操作时，文件接口返回 409。
 
-## POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/files {#post-uploadsessionfile}
+## POST /apps/{appName}/users/{userId}/sessions/{sessionId}/files {#post-uploadsessionfile}
 
 上传文件 · `UploadSessionFile`
 
@@ -23,9 +23,9 @@ toc_max_heading_level: 2
 | `X-Session-Id` | string | Header | 否 | Runtime 返回过该值时原样回传。 |
 | `Content-Type` | string | Header | 是 | `multipart/form-data`，含客户端生成的 boundary。 |
 | `Content-Length` | integer | Header | 是 | 整个请求体长度，最大 9 MiB；缺失返回 411。 |
-| `app_name` | string | Path | 是 | `harness_agent`。 |
-| `user_id` | string | Path | 是 | 会话所属用户。 |
-| `session_id` | string | Path | 是 | 已存在的会话 ID。 |
+| `appName` | string | Path | 是 | `harness_agent`。 |
+| `userId` | string | Path | 是 | 会话所属用户。 |
+| `sessionId` | string | Path | 是 | 已存在的会话 ID。 |
 | `file` | binary | Body（multipart） | 是 | 恰好一个文件，内容最大 8 MiB。文件名须为单个路径段，最长 255 字符，不得包含路径分隔符或控制字符。 |
 | `path` | string | Body（multipart） | 否 | 默认 `.`。已存在的目标目录；相对路径以沙箱工作目录为基准，也可传绝对路径。至多一个值。 |
 
@@ -63,7 +63,7 @@ curl --fail-with-body -X POST \
 }
 ```
 
-## GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/files {#get-listsessionfiles}
+## GET /apps/{appName}/users/{userId}/sessions/{sessionId}/files {#get-listsessionfiles}
 
 列出文件 · `ListSessionFiles`
 
@@ -75,9 +75,9 @@ curl --fail-with-body -X POST \
 |-|-|-|-|-|
 | `Authorization` | string | Header | 是 | 按 Runtime 认证模式提供。Bearer 部署使用 `Bearer <token>`。 |
 | `X-Session-Id` | string | Header | 否 | Runtime 返回过该值时原样回传。 |
-| `app_name` | string | Path | 是 | `harness_agent`。 |
-| `user_id` | string | Path | 是 | 会话所属用户。 |
-| `session_id` | string | Path | 是 | 已存在的会话 ID。 |
+| `appName` | string | Path | 是 | `harness_agent`。 |
+| `userId` | string | Path | 是 | 会话所属用户。 |
+| `sessionId` | string | Path | 是 | 已存在的会话 ID。 |
 | `path` | string | Query | 否 | 默认 ``.``。 要列出的目录；相对路径以沙箱工作目录为基准。 |
 | `recursive` | `true` / `false` | Query | 否 | 默认 ``false``。 是否递归列出；大小写不敏感。 |
 | `show_hidden` | `true` / `false` | Query | 否 | 默认 ``false``。 是否包含隐藏项；大小写不敏感。 |
@@ -129,7 +129,7 @@ Authorization: Bearer <token>
 }
 ```
 
-## GET /apps/{app_name}/users/{user_id}/sessions/{session_id}/files/download {#get-downloadsessionfile}
+## GET /apps/{appName}/users/{userId}/sessions/{sessionId}/files/download {#get-downloadsessionfile}
 
 下载文件 · `DownloadSessionFile`
 
@@ -141,9 +141,9 @@ Authorization: Bearer <token>
 |-|-|-|-|-|
 | `Authorization` | string | Header | 是 | 按 Runtime 认证模式提供。Bearer 部署使用 `Bearer <token>`。 |
 | `X-Session-Id` | string | Header | 否 | Runtime 返回过该值时原样回传。 |
-| `app_name` | string | Path | 是 | `harness_agent`。 |
-| `user_id` | string | Path | 是 | 会话所属用户。 |
-| `session_id` | string | Path | 是 | 已存在的会话 ID。 |
+| `appName` | string | Path | 是 | `harness_agent`。 |
+| `userId` | string | Path | 是 | 会话所属用户。 |
+| `sessionId` | string | Path | 是 | 已存在的会话 ID。 |
 | `path` | string | Query | 是 | 文件路径；相对路径以沙箱工作目录为基准，不可为根目录 `/`。 |
 | `Range` | string | Header | 否 | 只接受一个 `bytes=start-end`、`bytes=start-` 或 `bytes=-suffix` 区间。多段 Range 返回 400。 |
 | `If-Range` | string | Header | 否 | 原样转发给沙箱；仅与 Range 一起使用时有意义。 |

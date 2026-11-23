@@ -1,27 +1,27 @@
 # Harness 配置与版本管理
 
-在[实战教学](flow.md)中，我们在创建 Session 时提供 `workspace_id`、`harness_id` 和 `environment_id`，将一个具体的 Harness 及其执行环境绑定到当前对话。后续消息可以沿用其中的模型、系统指令、Skill、MCP 和沙箱配置，不需要每轮重新提交。
+在[实战教学](flow.md)中，我们在创建 Session 时提供 `workspaceId`、`harnessId` 和 `environmentId`，将一个具体的 Harness 及其执行环境绑定到当前对话。后续消息可以沿用其中的模型、系统指令、Skill、MCP 和沙箱配置，不需要每轮重新提交。
 
 但一次对话可能持续数小时甚至数天。在此期间，其他调用方可能通过 `UpdateHarness` 修改 Harness；开发者也可能只想临时调整某一轮，而不影响其他会话。要正确处理这些需求，需要先区分三件事：创建 Session 时绑定的是配置来源，实例快照承载解析后的执行配置，`/run_sse` 中的 `harness` object 只覆盖当前一轮。
 
-![会话绑定、实例快照与单轮覆盖的分层关系](/img/0.3.1/snapshot-layers.svg)
+![会话绑定、实例快照与单轮覆盖的分层关系](/img/0.4.0/snapshot-layers.svg)
 
-## 创建阶段的 `harness_id` 决定配置来源
+## 创建阶段的 `harnessId` 决定配置来源
 
 创建 Session 时提交的三个 ID 组成一组会话绑定，各自承担不同职责。
 
 | 字段 | 作用 |
 | --- | --- |
-| `workspace_id` | 限定 Harness 和 Environment 所属的 Workspace，也是查询两个资源时使用的范围 |
-| `harness_id` | 指向模型、系统指令、Skill 和 MCP 等对话配置的来源 |
-| `environment_id` | 指向执行环境，Harness App 从中取得沙箱 `ToolId` |
+| `workspaceId` | 限定 Harness 和 Environment 所属的 Workspace，也是查询两个资源时使用的范围 |
+| `harnessId` | 指向模型、系统指令、Skill 和 MCP 等对话配置的来源 |
+| `environmentId` | 指向执行环境，Harness App 从中取得沙箱 `ToolId` |
 
-`harness_id` 本身不是 Harness 配置，也不是一份可以直接执行的快照。创建 Session 时，Harness App 使用这组绑定调用 `GetHarness` 和 `GetEnvironment`，确认资源属于同一 Workspace、状态可用，再把控制面结构转换成运行时配置。例如，`Model.Id` 转换为 `model_name`，`System` 转换为 `system_prompt`，Environment 的 `ToolId` 转换为 `sandbox.tool_id`。
+`harnessId` 本身不是 Harness 配置，也不是一份可以直接执行的快照。创建 Session 时，Harness App 使用这组绑定调用 `GetHarness` 和 `GetEnvironment`，确认资源属于同一 Workspace、状态可用，再把控制面结构转换成运行时配置。例如，`Model.Id` 转换为 `model_name`，`System` 转换为 `system_prompt`，Environment 的 `ToolId` 转换为 `sandbox.tool_id`。
 
 三个绑定 ID 随 Session state 保存，解析后的结果则缓存在 Harness App 实例中。可以把两者的职责理解为：
 
 ```text
-会话绑定 B = (workspace_id, harness_id, environment_id)
+会话绑定 B = (workspaceId, harnessId, environmentId)
 实例快照 S = resolve(B)
 ```
 
@@ -93,29 +93,29 @@ Session state 保存“配置来自哪里”，实例快照保存“当前执行
 
 ## Harness 版本与快照恢复
 
-前面的使用方式只需要关心“普通请求复用、需要更新时刷新、临时变化时覆盖”。在实例重启和多副本场景中，还需要一个持久化标识，保证服务知道应该重建哪一份 Harness 配置，这就是 `state.harness_version` 的作用。
+前面的使用方式只需要关心“普通请求复用、需要更新时刷新、临时变化时覆盖”。在实例重启和多副本场景中，还需要一个持久化标识，保证服务知道应该重建哪一份 Harness 配置，这就是 `state.harnessVersion` 的作用。
 
-创建绑定 Session 时可以提供正整数 `harness_version`，明确选择一个 Harness 历史版本。省略该字段时，服务读取创建时的最新 Harness，并把 `GetHarness` 实际返回的版本写入 Session state。省略只代表“创建时选择最新”，不代表后续持续跟随最新。
+创建绑定 Session 时可以提供正整数 `harnessVersion`，明确选择一个 Harness 历史版本。省略该字段时，服务读取创建时的最新 Harness，并把 `GetHarness` 实际返回的版本写入 Session state。省略只代表“创建时选择最新”，不代表后续持续跟随最新。
 
 下面以 Session 创建时使用 v1、之后 Harness 更新到 v2 为例：
 
 | 场景 | Session 使用的配置 |
 | --- | --- |
-| 创建时省略版本，控制面最新为 v1 | 记录 `harness_version: 1`，使用 v1 |
+| 创建时省略版本，控制面最新为 v1 | 记录 `harnessVersion: 1`，使用 v1 |
 | `UpdateHarness` 发布 v2，随后发送普通消息 | 继续使用 v1 |
 | 实例重启或请求切换副本，内存快照丢失 | 服务以 `HarnessVersion=1` 自动重建快照，仍使用 v1 |
 | 发送 `refresh_snapshot: true` | 查询最新 Harness，成功后记录 v2 并使用 v2 |
 
-![Session 记录 Harness 版本、实例自动恢复快照与主动刷新的关系](/img/0.3.1/snapshot-lifecycle.svg)
+![Session 记录 Harness 版本、实例自动恢复快照与主动刷新的关系](/img/0.4.0/snapshot-lifecycle.svg)
 
-因此，实例快照只是可以重建的内存缓存，Session state 中的绑定和 `harness_version` 才是恢复依据。使用 PostgreSQL 等持久化会话后端时，调用方在实例重启后继续发送普通消息即可，不需要用刷新字段恢复缓存。默认的本地内存后端会同时丢失 Session state 和对话历史，此时原 Session 无法恢复。
+因此，实例快照只是可以重建的内存缓存，Session state 中的绑定和 `harnessVersion` 才是恢复依据。使用 PostgreSQL 等持久化会话后端时，调用方在实例重启后继续发送普通消息即可，不需要用刷新字段恢复缓存。默认的本地内存后端会同时丢失 Session state 和对话历史，此时原 Session 无法恢复。
 
-运行阶段显式提供 `harness_version` 时，它只用于确认请求中的版本与 Session 当前记录一致，不能借此为已有 Session 切换版本。`harness_version` 与 `refresh_snapshot: true` 也不能同时提供：前者表示指定版本，后者表示采用最新版本。若要回到历史版本或并行比较两个版本，应以目标 `harness_version` 创建另一个 Session。
+运行阶段显式提供 `harnessVersion` 时，它只用于确认请求中的版本与 Session 当前记录一致，不能借此为已有 Session 切换版本。`harnessVersion` 与 `refresh_snapshot: true` 也不能同时提供：前者表示指定版本，后者表示采用最新版本。若要回到历史版本或并行比较两个版本，应以目标 `harnessVersion` 创建另一个 Session。
 
-版本固定的范围是 Harness 历史配置，不是整个外部执行环境。Environment 仍按 `environment_id` 读取，外部 Skill 包、MCP 服务和工具实现也可能独立变化。因此，恢复旧 Harness 可以还原其中保存的引用和参数，但不承诺外部依赖的内容完全回到同一时刻。
+版本固定的范围是 Harness 历史配置，不是整个外部执行环境。Environment 仍按 `environmentId` 读取，外部 Skill 包、MCP 服务和工具实现也可能独立变化。因此，恢复旧 Harness 可以还原其中保存的引用和参数，但不承诺外部依赖的内容完全回到同一时刻。
 
-已有旧 Session 可能没有 `state.harness_version`。这类 Session 有可用缓存时可以继续使用；缓存丢失后，普通消息使用部署默认配置，不会擅自查询 Harness 最新版本。若 Session 保存了完整的三个绑定 ID，可以显式刷新一次，由服务建立新的配置基线和版本记录。
+已有旧 Session 可能没有 `state.harnessVersion`。这类 Session 有可用缓存时可以继续使用；缓存丢失后，普通消息使用部署默认配置，不会擅自查询 Harness 最新版本。若 Session 保存了完整的三个绑定 ID，可以显式刷新一次，由服务建立新的配置基线和版本记录。
 
-综上，创建阶段的 `harness_id` 决定配置来源，`refresh_snapshot` 让已有 Session 主动采用来源中的新配置，`harness` object 只改变当前一轮；`harness_version` 则让这份会话配置在实例重启后仍可准确恢复。
+综上，创建阶段的 `harnessId` 决定配置来源，`refresh_snapshot` 让已有 Session 主动采用来源中的新配置，`harness` object 只改变当前一轮；`harnessVersion` 则让这份会话配置在实例重启后仍可准确恢复。
 
 会话状态和异常处理见[会话状态、历史与快照恢复](sessions.md)，控制面历史版本查询见 [GetHarness](../api/harness.md#getharness-top) 和 [ListHarnessVersions](../api/harness.md#listharnessversions-top)。

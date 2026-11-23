@@ -77,7 +77,7 @@ Harness Chat 和 OBO 的 Chat Completions 模型调用会把工具图片转换�
 
 ## 绑定会话如何取得沙箱 Tool
 
-在 [创建到对话的流程](flow.md) 中，`environment_id` 指向与 Harness 同一 Workspace 的 Active Cloud Environment。App 以服务身份调用 `GetEnvironment`，将返回的 `ToolId` 写入实例快照的 `sandbox.tool_id`。SelfHosted Environment 和缺少 ToolId 的配置在解析阶段返回 422。后续普通消息使用快照；若只想调整本轮 TTL，可以传 `"harness":{"sandbox":{"ttl":3600}}`，保留快照的 ToolId。
+在 [创建到对话的流程](flow.md) 中，`environmentId` 指向与 Harness 同一 Workspace 的 Active Cloud Environment。App 以服务身份调用 `GetEnvironment`，将返回的 `ToolId` 写入实例快照的 `sandbox.tool_id`。SelfHosted Environment 和缺少 ToolId 的配置在解析阶段返回 422。后续普通消息使用快照；若只想调整本轮 TTL，可以传 `"harness":{"sandbox":{"ttl":3600}}`，保留快照的 ToolId。
 
 读取 Environment 时尚未分配物理沙箱。ADK 根据最终的 ToolId 装配 AIO 工具；快照解析器读取的工具信息来自 Environment，当前实现不会逐项装配 `CreateHarness.Tools[].Configs`。下文说明模型选用工具后的执行过程。
 
@@ -91,7 +91,7 @@ Harness Chat 和 OBO 的 Chat Completions 模型调用会把工具图片转换�
 | “把以下三笔订单写入工作目录的 orders.csv。” | 调用 WriteFile | 首次使用沙箱工具时，Harness App 根据选定的 Tool 获取沙箱 Session 和 Endpoint，再把文件写入沙箱工作目录。 |
 | “读回刚才的文件，按城市汇总。” | 调用 ReadFile 或 Execute | 同一实例上绑定仍有效时直接复用 Endpoint，读取上一轮生成的文件。Runner 把读取内容或命令结果交给模型，再通过原来的对话连接返回回答。 |
 
-这里有三个不同的标识：应用持有**对话 session_id**；Harness App 从应用、用户和对话标识派生稳定的 **UserSessionId**，用于关联创建请求；AgentKit 控制面返回的 **SessionId** 指向某一次实际分配的沙箱。用户能读回同一个文件，取决于后两轮是否落在同一个物理沙箱。
+这里有三个不同的标识：应用持有**对话 sessionId**；Harness App 从应用、用户和对话标识派生稳定的 **UserSessionId**，用于关联创建请求；AgentKit 控制面返回的 **SessionId** 指向某一次实际分配的沙箱。用户能读回同一个文件，取决于后两轮是否落在同一个物理沙箱。
 
 ## 从工具声明到执行结果
 
