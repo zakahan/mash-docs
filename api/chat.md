@@ -8,7 +8,7 @@
 
 在已创建的会话中执行一次 Agent 并在执行完成后返回事件数组，适用于非流式调用。
 
-**请求参数**
+### 请求参数
 
 | 字段 | 类型 | 位置 | 必填 | 说明 |
 |-|-|-|-|-|
@@ -41,7 +41,16 @@
 | `invocationId` | string or null | Body | 否 | 调用标识；省略时由服务端生成。 |
 | `customMetadata` | object or null | Body | 否 | 调用方自定义元数据。 |
 
-**响应字段**
+### 调用示例
+
+```http
+POST /run
+Content-Type: application/json
+
+{"appName":"harness_agent","userId":"reader-1","sessionId":"report-1","newMessage":{"role":"user","parts":[{"text":"总结报告。"}]}}
+```
+
+### 响应字段
 
 | 字段 | 类型 | 位置 | 必返 | 说明 |
 |-|-|-|-|-|
@@ -61,15 +70,6 @@
 | `[].customMetadata` | object or null | Body | 否 | 自定义元数据。 |
 | `[].output` | any or null | Body | 否 | 节点输出。 |
 | `[].branch` | string or null | Body | 否 | 事件所属分支。 |
-
-**调用示例**
-
-```http
-POST /run
-Content-Type: application/json
-
-{"appName":"harness_agent","userId":"reader-1","sessionId":"report-1","newMessage":{"role":"user","parts":[{"text":"总结报告。"}]}}
-```
 
 先创建会话。返回完整的 ADK Event 数组，按顺序读取每个事件的 content.parts。
 

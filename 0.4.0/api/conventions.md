@@ -15,13 +15,13 @@ Content-Type: application/json
 
 示例中的模型标识需替换为目标环境可用值；`Action` 必须与接口名称完全一致。
 
-| 参数 | 位置 | 类型 | 是否必填 | 默认值 | 说明 |
+| 参数 | 类型 | 位置 | 是否必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- | --- |
-| Action | Query | string | 是 | — | 控制面接口名称。 |
-| Version | Query | string | 是 | — | API 日期版本 `2025-10-30`，与 Harness 配置修订号不同。 |
-| Content-Type | Header | string | 有 JSON 正文时必填 | — | `application/json`。 |
-| x-api-key | Header | string | Session 数据面按入口认证方式提供 | — | 环境访问密钥，不是模型 API Key。其他入口支持的认证方式以部署说明为准。 |
-| x-ark-key-name | Header | string | 按 Session 接口要求 | — | 模型 API Key Name，不替代环境访问密钥或账号签名。 |
+| Action | string | Query | 是 | — | 控制面接口名称。 |
+| Version | string | Query | 是 | — | API 日期版本 `2025-10-30`，与 Harness 配置修订号不同。 |
+| Content-Type | string | Header | 有 JSON 正文时必填 | — | `application/json`。 |
+| x-api-key | string | Header | Session 数据面按入口认证方式提供 | — | 环境访问密钥，不是模型 API Key。其他入口支持的认证方式以部署说明为准。 |
+| x-ark-key-name | string | Header | 按 Session 接口要求 | — | 模型 API Key Name，不替代环境访问密钥或账号签名。 |
 
 Session 数据面使用分配的 Endpoint 和环境访问密钥；HTTP 方法、路径与额外请求头见各接口。控制面身份由认证入口确定，不能通过自行填写账号头获得其他账号权限。
 
