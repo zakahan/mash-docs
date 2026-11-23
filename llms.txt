@@ -4,10 +4,11 @@
 
 ## API 参考
 
-- [Harness App 调用接口](api/app.md)
+- [会话管理接口](api/app.md)
+- [对话调用接口](api/chat.md)
 - [API 调用约定](api/conventions.md)
 - [Env 管理接口](api/environment.md)
-- [Harness 会话文件接口](api/files.md)
+- [文件操作接口](api/files.md)
 - [Agentkit:Harness 管理接口](api/harness.md)
 - [API 参考](api/index.md)
 - [Managed Agents API：Session 与事件](api/session.md)

@@ -172,7 +172,7 @@ DATABASE_POSTGRESQL_SCHEMA=harness_app
 | `INCLUDE_TOOLS_EVERY_TURN` | true | 在 0.3.1 中，设为 false 时启用 Ark Responses 上下文缓存。 |
 | `HARNESS_NAME` | `harness_app` | 配置默认 Harness 的名称，也用来组装部署级知识库或长期记忆的应用名。客户端创建会话时，应用名以 `GET /list-apps` 返回值为准。 |
 
-在支持请求级覆盖的入口，Runtime 从部署 Harness Agent 克隆本次调用使用的 Harness Agent，只应用显式提供的覆盖字段。仅在这次请求需要另一组工具时，参考[调用配置](config.md)和[运行时接口](../api/app.md)。
+在支持请求级覆盖的入口，Runtime 从部署 Harness Agent 克隆本次调用使用的 Harness Agent，只应用显式提供的覆盖字段。仅在这次请求需要另一组工具时，参考[调用配置](config.md)和[运行时接口](../api/chat.md)。
 
 ## 工具、技能和 AIO 沙箱
 

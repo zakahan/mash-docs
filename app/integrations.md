@@ -2,7 +2,7 @@
 
 当调用方本身是另一个 Agent，可以使用镜像提供的 A2A 协议。当需要在约定时间发起一次提示词执行，可以创建 Cronjob。两种能力都使用 Harness App 的执行链路，但会话标识、返回对象和启用条件各有自己的约定。
 
-完整参数、Harness 扩展和流式事件见 [Harness App 调用接口：A2A](../api/app.md#get-a2acard)。
+完整参数、Harness 扩展和流式事件见 [对话调用接口：A2A](../api/chat.md#get-a2acard)。
 
 ## 从另一个 Agent 调用
 

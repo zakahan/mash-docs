@@ -106,7 +106,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 }
 ```
 
-此处的 `api_key` 只填凭证值，Runtime 会为 Authorization 拼接 `Bearer `。这与控制面配置中填写完整 `Headers.Authorization` 的方式不同。数组整体替换，下一轮省略就回到快照配置，传 `[]` 则清空本轮直接服务列表。[运行接口](../api/app.md#post-runagentsse)
+此处的 `api_key` 只填凭证值，Runtime 会为 Authorization 拼接 `Bearer `。这与控制面配置中填写完整 `Headers.Authorization` 的方式不同。数组整体替换，下一轮省略就回到快照配置，传 `[]` 则清空本轮直接服务列表。[运行接口](../api/chat.md#post-runagentsse)
 
 ## 执行与连接生命周期
 
