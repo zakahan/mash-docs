@@ -1,6 +1,6 @@
 # Harness App 调用接口
 
-本页记录 0.3.1的 Runtime HTTP 入口，覆盖 Harness Agent 的会话、HTTP/SSE 执行及 A2A 消息调用。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
+本页记录 0.4.0 的 Runtime HTTP 入口，覆盖 Harness Agent 的会话、HTTP/SSE 执行及 A2A 消息调用。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
 
 | 操作 | 选择接口 |
 |---|---|
@@ -9,6 +9,7 @@
 | 完整事件数组、实时事件流 | RunAgent、RunAgentSSE |
 | 简化输入 | Invoke（SSE） |
 | Agent 间消息调用与文件输出 | A2A message/send、message/stream |
+| 上传、列出与下载沙箱文件 | [会话文件接口](files.md) |
 
 ### 绑定会话与认证
 

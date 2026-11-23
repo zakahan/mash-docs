@@ -20,10 +20,11 @@ module.exports = {manual: [
     ]},
     "app/advanced",
     "app/permissions",
+    "app/artifacts",
     "app/load-test",
   ]},
   {type:'category', label:'Managed Agents Worker', items:['managed/guide','managed/events','managed/resources','managed/config','managed/develop']},
-  {type:'category', label:'API 参考', items:['api/index','api/conventions',restSection('app','Harness App 调用接口'),
+  {type:'category', label:'API 参考', items:['api/index','api/conventions',restSection('app','Harness App 调用接口'),restSection('files','Harness 会话文件接口'),
     {type:'category', label:'AgentKit 控制面 接口', items:[
       {type:'doc', id:'api/harness', label:'Harness'},
       {type:'doc', id:'api/environment', label:'Env'},

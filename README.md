@@ -2,7 +2,7 @@
 
 使用 Node.js 22，在本目录运行 `npm ci` 和 `npm start`。生产构建运行 `npm run build`，本地查看产物使用 `npm run serve`。部署时设置 `DOCS_URL` 和可选的 `DOCS_BASE_URL`。
 
-`docs/` 对应 latest，目前跟踪 0.3.1 实现。`versioned_docs/version-0.3.1/` 和 `versioned_docs/version-0.2.0/` 保存对应发布版本的快照。按变更实际适用的版本维护文档。发布下一版本时先更新 latest，执行 `npm run snapshot -- <版本号>`，再检查新快照、侧边栏与版本切换。
+`docs/` 对应 latest，目前跟踪待发布的 0.4.0 实现。`versioned_docs/version-0.4.0/`、`versioned_docs/version-0.3.1/` 和 `versioned_docs/version-0.2.0/` 保存对应发布版本的快照。按变更实际适用的版本维护文档。发布下一版本时先更新 latest，执行 `npm run snapshot -- <版本号>`，再检查新快照、侧边栏与版本切换。
 
 控制面接口使用独立的 API 版本；开发中能力在对应页面明确标注。Harness App 请求与响应按镜像版本维护。
 

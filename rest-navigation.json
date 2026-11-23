@@ -13,6 +13,11 @@
     "post-a2asend": "A2A 消息调用",
     "post-a2astream": "A2A 流式消息"
   },
+  "files": {
+    "post-uploadsessionfile": "上传文件",
+    "get-listsessionfiles": "列出文件",
+    "get-downloadsessionfile": "下载文件"
+  },
   "session": {
     "createagentsessionrest": "创建托管会话",
     "getagentsessionrest": "查询托管会话详情",
