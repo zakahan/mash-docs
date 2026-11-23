@@ -1,0 +1,108 @@
+.markdown table.env-reference {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.env-reference th:first-child { width: 34%; }
+.env-reference th:nth-child(2) { width: 18%; }
+
+.env-reference :is(th, td) {
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.env-reference code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .env-reference :is(th, td) { padding: .45rem; }
+}
+
+.api-contract {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.api-contract aside { position: sticky; top: 5rem; }
+.api-contract pre { font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+:is(.api-contract, .api-fields) details.alert {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+:is(.api-contract, .api-fields) details.alert > summary {
+  position: relative;
+  padding: .48rem 1.8rem .48rem 0;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+:is(.api-contract, .api-fields) details.alert > summary::before { display: none; }
+:is(.api-contract, .api-fields) details.alert > summary::after {
+  content: '';
+  position: absolute;
+  top: .95rem;
+  right: .45rem;
+  width: .45rem;
+  height: .45rem;
+  border: solid var(--ifm-color-emphasis-700);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(-45deg);
+}
+:is(.api-contract, .api-fields) details.alert[open] > summary::after { transform: rotate(45deg); }
+:is(.api-contract, .api-fields) details.alert > summary:focus-visible { outline: 2px solid var(--ifm-color-primary); }
+:is(.api-contract, .api-fields) details.alert > div > div {
+  margin: 0 0 .45rem .25rem;
+  padding: 0 0 0 .85rem;
+  border: 0;
+  border-left: 2px solid var(--ifm-color-emphasis-200);
+}
+:is(.api-contract, .api-fields) .api-field-description {
+  display: block;
+  margin-top: .18rem;
+  font-size: .9rem;
+  font-weight: normal;
+}
+.api-contract dl, .api-contract-meta dl { margin: 0; }
+.api-property { border-bottom: 1px solid var(--ifm-color-emphasis-200); padding: .48rem 0; }
+.api-property dt { font-weight: 600; }
+.api-property dd { margin: .18rem 0 0; font-size: .9rem; overflow-wrap: anywhere; }
+:is(.api-contract, .api-fields) small, .api-property small { color: var(--ifm-color-emphasis-700); font-size: .78rem; font-weight: normal; }
+@media (max-width: 1200px) {
+  .api-contract { grid-template-columns: minmax(0, 1fr); }
+  .api-contract aside { grid-row: 1; position: static; }
+}
+
+.api-fields { margin-bottom: var(--ifm-leading); }
+.api-fields dl { margin: 0; }
+.api-fields :is(dt, dd, summary) { overflow-wrap: anywhere; }
+:is(.api-contract, .api-fields, .api-contract-meta) :is(summary, dt) > code {
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+.markdown h2.api-operation-heading {
+  font: 600 1.12rem/1.65 var(--ifm-font-family-monospace);
+  margin-bottom: .45rem;
+}
+.api-operation-method {
+  display: inline-block;
+  vertical-align: .12em;
+  padding: .12em .52em;
+  border-radius: .3rem;
+  background: var(--ifm-color-emphasis-200);
+  font-size: .76em;
+  letter-spacing: .03em;
+}
+.api-path-segment { white-space: nowrap; }

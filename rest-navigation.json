@@ -1,0 +1,28 @@
+{
+  "app": {
+    "get-listsessions": "查询会话列表",
+    "post-createsession": "创建会话",
+    "post-createsessionwithid": "使用指定 ID 创建会话",
+    "get-getsession": "查询会话详情",
+    "patch-updatesession": "更新会话状态",
+    "delete-deletesession": "删除会话",
+    "post-runagent": "运行对话",
+    "post-runagentsse": "流式运行对话 [推荐]",
+    "post-invoke": "简化流式调用",
+    "get-a2acard": "发现 A2A 服务",
+    "post-a2asend": "A2A 消息调用",
+    "post-a2astream": "A2A 流式消息"
+  },
+  "session": {
+    "createagentsessionrest": "创建托管会话",
+    "getagentsessionrest": "查询托管会话详情",
+    "listagentsessionsrest": "查询托管会话列表",
+    "updateagentsessionrest": "更新托管会话",
+    "archiveagentsessionrest": "归档托管会话",
+    "deleteagentsessionrest": "删除托管会话",
+    "sendsessioneventsrest": "发送会话事件",
+    "listsessioneventsrest": "查询事件历史",
+    "sessioneventsstreamrest": "订阅事件流",
+    "listsessionresourcesrest": "查询会话资源"
+  }
+}

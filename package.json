@@ -1,0 +1,25 @@
+{
+  "name": "veadk-agent-loop-docs",
+  "private": true,
+  "scripts": {
+    "start": "docusaurus start",
+    "build": "docusaurus build && npm run check:public",
+    "check:public": "node scripts/check-public.js",
+    "serve": "docusaurus serve",
+    "snapshot": "docusaurus docs:version"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "3.1.1",
+    "cheerio": "1.0.0-rc.12",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "browserslist": [
+    "defaults"
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "manual": [
+    "intro",
+    {
+      "type": "category",
+      "label": "Harness App",
+      "items": [
+        "app/guide",
+        "app/flow",
+        "app/quickstart",
+        "app/sessions",
+        "app/features",
+        "app/tools",
+        "app/sandbox",
+        "app/artifacts",
+        "app/integrations",
+        "app/config",
+        "app/advanced",
+        "app/develop"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Managed Agents Worker",
+      "items": [
+        "managed/guide",
+        "managed/events",
+        "managed/resources",
+        "managed/config",
+        "managed/develop"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "API 参考",
+      "items": [
+        "api/index",
+        "api/conventions",
+        {
+          "type": "category",
+          "label": "Harness App 调用接口",
+          "link": {
+            "type": "doc",
+            "id": "api/app"
+          },
+          "items": [
+            {
+              "type": "link",
+              "label": "查询会话列表",
+              "href": "/0.2.0/api/app#get-listsessions"
+            },
+            {
+              "type": "link",
+              "label": "创建会话",
+              "href": "/0.2.0/api/app#post-createsession"
+            },
+            {
+              "type": "link",
+              "label": "使用指定 ID 创建会话",
+              "href": "/0.2.0/api/app#post-createsessionwithid"
+            },
+            {
+              "type": "link",
+              "label": "查询会话详情",
+              "href": "/0.2.0/api/app#get-getsession"
+            },
+            {
+              "type": "link",
+              "label": "更新会话状态",
+              "href": "/0.2.0/api/app#patch-updatesession"
+            },
+            {
+              "type": "link",
+              "label": "删除会话",
+              "href": "/0.2.0/api/app#delete-deletesession"
+            },
+            {
+              "type": "link",
+              "label": "运行对话",
+              "href": "/0.2.0/api/app#post-runagent"
+            },
+            {
+              "type": "link",
+              "label": "流式运行对话",
+              "href": "/0.2.0/api/app#post-runagentsse"
+            },
+            {
+              "type": "link",
+              "label": "简化流式调用",
+              "href": "/0.2.0/api/app#post-invoke"
+            },
+            {
+              "type": "link",
+              "label": "使用配置覆盖调用",
+              "href": "/0.2.0/api/app#post-harnessinvoke"
+            },
+            {
+              "type": "link",
+              "label": "查询会话产物",
+              "href": "/0.2.0/api/app#get-listharnessartifacts"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "AgentKit 控制面 接口",
+          "items": [
+            {
+              "type": "doc",
+              "id": "api/harness",
+              "label": "Harness"
+            },
+            {
+              "type": "doc",
+              "id": "api/environment",
+              "label": "Env"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Managed Agents API：Session 与事件",
+          "link": {
+            "type": "doc",
+            "id": "api/session"
+          },
+          "items": [
+            {
+              "type": "link",
+              "label": "创建托管会话",
+              "href": "/0.2.0/api/session#createagentsessionrest"
+            },
+            {
+              "type": "link",
+              "label": "查询托管会话详情",
+              "href": "/0.2.0/api/session#getagentsessionrest"
+            },
+            {
+              "type": "link",
+              "label": "查询托管会话列表",
+              "href": "/0.2.0/api/session#listagentsessionsrest"
+            },
+            {
+              "type": "link",
+              "label": "更新托管会话",
+              "href": "/0.2.0/api/session#updateagentsessionrest"
+            },
+            {
+              "type": "link",
+              "label": "归档托管会话",
+              "href": "/0.2.0/api/session#archiveagentsessionrest"
+            },
+            {
+              "type": "link",
+              "label": "删除托管会话",
+              "href": "/0.2.0/api/session#deleteagentsessionrest"
+            },
+            {
+              "type": "link",
+              "label": "发送会话事件",
+              "href": "/0.2.0/api/session#sendsessioneventsrest"
+            },
+            {
+              "type": "link",
+              "label": "查询事件历史",
+              "href": "/0.2.0/api/session#listsessioneventsrest"
+            },
+            {
+              "type": "link",
+              "label": "订阅事件流",
+              "href": "/0.2.0/api/session#sessioneventsstreamrest"
+            },
+            {
+              "type": "link",
+              "label": "查询会话资源",
+              "href": "/0.2.0/api/session#listsessionresourcesrest"
+            }
+          ]
+        }
+      ]
+    },
+    "versions"
+  ]
+}
