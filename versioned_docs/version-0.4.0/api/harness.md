@@ -15,7 +15,7 @@
 
 0.3.1的 Harness App 可在创建 Cloud 会话时读取这里保存的配置。调用方取得 `Result.HarnessId` 后，将它与同一工作区的 Workspace ID、Cloud Environment ID 一起交给 Runtime；后续消息可显式刷新配置。可用字段与运行时映射见[完整调用链路](../app/flow.md)。
 
-直接调用 Harness App 时，用户、会话和运行接口属于 Runtime HTTP 服务。使用 Worker 的应用则通过托管 Session 数据面读写事件。两种入口分别见 [Harness App 调用接口](app.md) 和 [Managed Agents API](session.md)。上表关联资源的可用状态以对应 AgentKit 契约及目标环境为准。
+直接调用 Harness App 时，用户、会话和运行接口属于 Runtime HTTP 服务。使用 Worker 的应用则通过托管 Session 数据面读写事件。两种入口分别见 [Harness App 接口](index.md) 和 [Managed Agents API](session.md)。上表关联资源的可用状态以对应 AgentKit 契约及目标环境为准。
 
 <!-- api-contracts:start -->
 <a id="全字段参考"></a>

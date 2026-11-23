@@ -1,4 +1,4 @@
-# Harness 会话文件接口
+# 文件操作接口
 
 本页记录 **0.4.0（`release/v0.4` 实现，待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。
 

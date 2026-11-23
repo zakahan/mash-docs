@@ -1,6 +1,6 @@
 # API 调用约定
 
-本页适用于 [Harness 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`；开发中接口的状态见对应页面。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [Harness App 调用接口](app.md)。
+本页适用于 [Harness 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`；开发中接口的状态见对应页面。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [会话管理接口](app.md)、[对话调用接口](chat.md)和[文件操作接口](files.md)。
 
 ## 认证与请求地址
 

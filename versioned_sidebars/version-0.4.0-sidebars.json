@@ -61,7 +61,7 @@
         "api/conventions",
         {
           "type": "category",
-          "label": "Harness App 调用接口",
+          "label": "会话管理接口",
           "link": {
             "type": "doc",
             "id": "api/app"
@@ -96,42 +96,52 @@
               "type": "link",
               "label": "删除会话",
               "href": "/0.4.0/api/app#delete-deletesession"
-            },
-            {
-              "type": "link",
-              "label": "运行对话",
-              "href": "/0.4.0/api/app#post-runagent"
-            },
-            {
-              "type": "link",
-              "label": "流式运行对话 [推荐]",
-              "href": "/0.4.0/api/app#post-runagentsse"
-            },
-            {
-              "type": "link",
-              "label": "简化流式调用",
-              "href": "/0.4.0/api/app#post-invoke"
-            },
-            {
-              "type": "link",
-              "label": "发现 A2A 服务",
-              "href": "/0.4.0/api/app#get-a2acard"
-            },
-            {
-              "type": "link",
-              "label": "A2A 消息调用",
-              "href": "/0.4.0/api/app#post-a2asend"
-            },
-            {
-              "type": "link",
-              "label": "A2A 流式消息",
-              "href": "/0.4.0/api/app#post-a2astream"
             }
           ]
         },
         {
           "type": "category",
-          "label": "Harness 会话文件接口",
+          "label": "对话调用接口",
+          "link": {
+            "type": "doc",
+            "id": "api/chat"
+          },
+          "items": [
+            {
+              "type": "link",
+              "label": "运行对话",
+              "href": "/0.4.0/api/chat#post-runagent"
+            },
+            {
+              "type": "link",
+              "label": "流式运行对话 [推荐]",
+              "href": "/0.4.0/api/chat#post-runagentsse"
+            },
+            {
+              "type": "link",
+              "label": "简化流式调用",
+              "href": "/0.4.0/api/chat#post-invoke"
+            },
+            {
+              "type": "link",
+              "label": "发现 A2A 服务",
+              "href": "/0.4.0/api/chat#get-a2acard"
+            },
+            {
+              "type": "link",
+              "label": "A2A 消息调用",
+              "href": "/0.4.0/api/chat#post-a2asend"
+            },
+            {
+              "type": "link",
+              "label": "A2A 流式消息",
+              "href": "/0.4.0/api/chat#post-a2astream"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "文件操作接口",
           "link": {
             "type": "doc",
             "id": "api/files"

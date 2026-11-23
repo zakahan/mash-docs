@@ -85,7 +85,7 @@ Session state 保存“配置来自哪里”，实例快照保存“当前执行
 本轮配置 E = merge(实例快照 S, request.harness)
 ```
 
-普通字段以请求中的显式值为准；`sandbox` 和 `knowledgebase` 按子字段合并，列表字段显式提供时整体替换。完整字段和嵌套结构见 [RunAgentSSE 的 `harness` object](../api/app.md#post-runagentsse)。
+普通字段以请求中的显式值为准；`sandbox` 和 `knowledgebase` 按子字段合并，列表字段显式提供时整体替换。完整字段和嵌套结构见 [RunAgentSSE 的 `harness` object](../api/chat.md#post-runagentsse)。
 
 合并只作用于当前一轮。它不会调用 `UpdateHarness`，不会修改控制面，也不会写回会话快照。下一轮省略 `harness` object 时，配置会回到 Session 的快照。
 

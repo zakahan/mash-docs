@@ -27,7 +27,7 @@
 | [使用 Skill 完成任务](skills.md) | 在 Harness 中登记 Skill 并刷新快照 | Skill 被加载，最终结果满足技能中可区分的约束 |
 | [调用 MCP 工具](mcp.md) | 在 Harness 中登记远程 MCP 服务并刷新快照 | 发现目标工具，调用参数和工具结果可在 SSE 中核对 |
 
-操作分支按“请求、关键响应、验收”组织；配置快照篇集中解释对象关系、生命周期和实例恢复。响应示例只保留判断成功所需的字段；完整契约以 [Harness App API](../api/app.md) 和 [Harness 控制面 API](../api/harness.md) 为准。
+操作分支按“请求、关键响应、验收”组织；配置快照篇集中解释对象关系、生命周期和实例恢复。响应示例只保留判断成功所需的字段；完整契约以 [会话管理接口](../api/app.md)、[对话调用接口](../api/chat.md)和 [Harness 控制面 API](../api/harness.md) 为准。
 
 ## 准备调用环境
 
@@ -314,6 +314,6 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 | 需要临时覆盖模型或指令 | 使用请求级 harness，规则见高级配置 |
 | 需要清理会话 | 调用 DeleteSession，先确认应用已完成历史留存 |
 
-普通运行请求没有自动去重保证，网络中断后直接重发可能产生额外一轮执行。Session 资源、响应字段和错误契约集中在 [Harness App API](../api/app.md)。
+普通运行请求没有自动去重保证，网络中断后直接重发可能产生额外一轮执行。Session 资源见[会话管理接口](../api/app.md)，运行响应和错误契约见[对话调用接口](../api/chat.md)。
 
 基础闭环完成后，不需要重新接入 Harness App。继续沿用本教程的变量和会话，进入[沙箱](sandbox.md)、[Skill](skills.md)或[MCP](mcp.md)分支，只修改能力配置和验证任务。应用仍只调用 Runtime HTTP 入口；Harness App 处理会话和快照，创建本轮 Agent，再交给进程内的 VeADK Runner 执行模型和工具。修改服务端实现时，从[开发入口](develop.md)定位对应代码。

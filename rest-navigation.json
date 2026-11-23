@@ -5,7 +5,9 @@
     "post-createsessionwithid": "使用指定 ID 创建会话",
     "get-getsession": "查询会话详情",
     "patch-updatesession": "更新会话状态",
-    "delete-deletesession": "删除会话",
+    "delete-deletesession": "删除会话"
+  },
+  "chat": {
     "post-runagent": "运行对话",
     "post-runagentsse": "流式运行对话 [推荐]",
     "post-invoke": "简化流式调用",

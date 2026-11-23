@@ -103,7 +103,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 | 创建会话的兼容字段 `resources` | `skills` 为空时使用其中的非空列表 |
 | Harness 快照的 `Skills` | 创建阶段没有非空覆盖且本轮未覆盖时使用，刷新会重新读取 |
 
-创建时 `skills: []` 沿用兼容回退规则。若你希望持续跟随 Harness 的配置，创建时省略这两个兼容字段。`harness.skills` 是另一种字符串引用，供下节的沙箱 Skill Space 路径使用。[完整请求字段](../api/app.md#post-runagentsse)
+创建时 `skills: []` 沿用兼容回退规则。若你希望持续跟随 Harness 的配置，创建时省略这两个兼容字段。`harness.skills` 是另一种字符串引用，供下节的沙箱 Skill Space 路径使用。[完整请求字段](../api/chat.md#post-runagentsse)
 
 ## 使用沙箱 Skill Space
 
@@ -131,4 +131,4 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 | 刷新后仍用会话指定的技能 | 检查创建时是否保存了非空 skills 或 resources |
 | 能看到技能说明，沙箱里却没有文件 | 确认选择的是哪条加载路径，检查沙箱加载器与下载进度 |
 
-Skill 字段及兼容入口的完整约束见 [Harness App 调用接口](../api/app.md)。
+Skill 字段及兼容入口的完整约束见 [对话调用接口](../api/chat.md)。

@@ -33,7 +33,7 @@
 | `run_agent_request.max_llm_calls` | 正整数。本例运行上限为 3；省略后依次使用 Harness 请求配置和运行时默认值。 |
 | `harness.knowledgebase` | 选择知识库类型和索引。连接参数和凭据由 Runtime 配置提供。 |
 
-控制面采用 `Model`、`System` 等字段；直接构造 Harness App 请求时按上表和[接口类型](../api/app.md)填写。
+控制面采用 `Model`、`System` 等字段；直接构造 Harness App 请求时按上表和[接口类型](../api/chat.md)填写。
 
 ### 未绑定会话的连续两次请求
 
