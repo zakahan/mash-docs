@@ -1,6 +1,6 @@
 # 文件操作接口
 
-本页记录 **0.4.0（`release/v0.4` 实现，待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。
+本页记录 **0.4.0（待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。
 
 先[创建会话](app.md#post-createsession)，并为会话配置 Sandbox Tool。绑定会话使用其固定版本的 Harness 快照中的 `sandbox.tool_id`；未绑定会话使用部署的 `HARNESS_SANDBOX_TOOL_ID` 或 `AGENTKIT_TOOL_ID`。没有 Tool ID 时返回 409。请求使用 Runtime 的认证方式；示例中的 Bearer Token 仅表示一种部署方式。认证身份与路径中的用户不匹配、会话不存在或应用名不符时返回 404。若 Runtime 返回 `X-Session-Id`，后续请求原样回传以维持路由亲和性。
 
@@ -77,15 +77,15 @@ curl --fail-with-body -X POST \
 | `sessionId` | string | Path | 是 | 已存在的会话 ID。 |
 | `path` | string | Query | 否 | 默认 ``.``。 要列出的目录；相对路径以沙箱工作目录为基准。 |
 | `recursive` | `true` / `false` | Query | 否 | 默认 ``false``。 是否递归列出；大小写不敏感。 |
-| `show_hidden` | `true` / `false` | Query | 否 | 默认 ``false``。 是否包含隐藏项；大小写不敏感。 |
-| `max_depth` | integer | Query | 否 | `0`–`20`；仅在 `recursive=true` 时传给沙箱。 |
+| `showHidden` | `true` / `false` | Query | 否 | 默认 `false`。是否包含隐藏项；大小写不敏感。 |
+| `maxDepth` | integer | Query | 否 | `0`–`20`；仅在 `recursive=true` 时传给沙箱。 |
 
 请求体留空。
 
 ### 请求示例
 
 ```http
-GET /apps/harness_agent/users/reader-1/sessions/report-1/files?path=%2Fhome%2Fgem&recursive=false
+GET /apps/harness_agent/users/reader-1/sessions/report-1/files?path=%2Fhome%2Fgem&recursive=true&showHidden=false&maxDepth=2
 Authorization: Bearer <token>
 ```
 
