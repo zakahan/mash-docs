@@ -35,7 +35,7 @@ Harness App 是运行在 AgentKit Runtime 中的 Agent HTTP 服务。业务应�
 4. 模型可以直接回答，也可以调用工具后继续推理。
 5. 应用持续接收 SSE 事件，会话服务保存本轮历史。
 
-应用可以控制何时采用新的配置。普通消息复用已有快照，`refresh_snapshot: true` 会重新读取 Harness 和 Environment。刷新后的会话继续保留原有对话历史。
+应用可以控制何时采用新的配置。普通消息复用已有快照，`refreshSnapshot: true` 会重新读取 Harness 和 Environment。刷新后的会话继续保留原有对话历史。
 
 ## 从接入到扩展
 

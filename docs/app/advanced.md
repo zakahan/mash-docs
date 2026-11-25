@@ -191,15 +191,16 @@ DATABASE_POSTGRESQL_SCHEMA=harness_app
 
 ### 指定工具执行的沙箱
 
-ADK 选择沙箱 Tool 后提供 `Execute`、`ReadFile`、`EditFile` 和 `WriteFile`。首次实际执行沙箱工具时才创建沙箱。Tool ID 的读取顺序是本次请求的 `harness.sandbox.tool_id`、部署的 `HARNESS_SANDBOX_TOOL_ID`、部署的 `AGENTKIT_TOOL_ID`。
+ADK 选择沙箱 Tool 后提供 `Execute`、`ReadFile`、`EditFile` 和 `WriteFile`。首次实际执行沙箱工具时才创建沙箱。绑定会话固定使用快照中的 Tool ID，不能通过本轮请求更换。未绑定会话的 Tool ID 读取顺序是本次请求的 `harness.sandbox.tool_id`、部署的 `HARNESS_SANDBOX_TOOL_ID`、部署的 `AGENTKIT_TOOL_ID`。
 
 | 环境变量 | 默认值 | 说明 |
 |---|---|---|
-| `HARNESS_SANDBOX_TOOL_ID` | 空 | 选择部署使用的沙箱 Tool，本轮请求可覆盖。 |
+| `HARNESS_SANDBOX_TOOL_ID` | 空 | 选择部署使用的沙箱 Tool，未绑定会话可由本轮请求覆盖。 |
 | `AGENTKIT_TOOL_ID` | 空 | 部署未指定 Harness 沙箱 Tool 时的回退值。 |
 | `HARNESS_SANDBOX_TOOL_ID_ALLOWLIST` | 空 | 逗号分隔的允许列表，用于校验传入的请求级 Tool ID。 |
-| `VEADK_AIO_WORKSPACE` | `/home/gem` | 使用沙箱内已存在的绝对目录。 |
+| `VEADK_AIO_WORKSPACE` | `/workspace` | 使用沙箱内已存在的绝对目录。 |
 | `VEADK_AIO_SESSION_TTL_SECONDS` | 28800 秒 | 请求级 `harness.sandbox.ttl` 可覆盖，允许 60–86400 秒。 |
+| `MA_ARK_FILES_BASE_URL` | `https://ark.cn-beijing.volces.com/api/v3` | 会话 `fileIds` 的 Ark Files 元数据服务地址；须为官方 Ark HTTPS 域名且路径为 `/api/v3`。查询使用本轮模型 API Key；下载流程见[会话输入文件](sandbox.md#session-input-files)。 |
 | `SANDBOX_API_KEY` | 空 | 可选，沙箱数据面需要时提供。 |
 | `VEADK_AIO_STORE_URL` | 本地 SQLite | 默认 SQLite 文件位于 `~/.veadk/aio/lifecycle.db`。跨副本共享沙箱AgentKit 控制面限流状态时，填写共同的 `postgresql+psycopg2://...` 地址。 |
 

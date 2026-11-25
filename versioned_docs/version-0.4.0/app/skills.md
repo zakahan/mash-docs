@@ -5,7 +5,7 @@
 | 相对基础流程 | 本篇做什么 |
 | --- | --- |
 | 配置 | 将 Skill 引用写入已有 Harness，而不是重新创建会话 |
-| 生效 | 在下一次 `/run_sse` 请求中设置 `refresh_snapshot: true` |
+| 生效 | 在下一次 `/run_sse` 请求中设置 `refreshSnapshot: true` |
 | 任务 | 要求模型生成只有使用该 Skill 才能稳定满足的结构 |
 | 验收 | 核对加载或工具错误，并检查最终结果是否满足技能中的可区分约束 |
 
@@ -75,7 +75,7 @@ Skill 为模型提供完成特定任务的说明和配套资源。将 Skill 配�
 刷新快照，同时发起一个需要技能格式的任务。
 
 ```bash
-jq '.refresh_snapshot = true | .newMessage.parts = [{text:"请使用报告格式技能，总结本周120笔、上周100笔订单的变化，按技能指定的结构输出。"}]' \
+jq '.refreshSnapshot = true | .newMessage.parts = [{text:"请使用报告格式技能，总结本周120笔、上周100笔订单的变化，按技能指定的结构输出。"}]' \
   message.json > skill-message.json
 curl --fail-with-body -sS -N \
   -H "Authorization: Bearer $RUNTIME_TOKEN" "${ROUTE_HEADERS[@]}" \

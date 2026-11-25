@@ -2,7 +2,7 @@
 
 本教程带你完成一次可验证的 Harness App 接入：在控制面创建 Harness，在 Runtime 创建绑定会话，通过 `/run_sse` 获得模型回复，再用同一个会话继续追问、读取历史和刷新配置。沙箱、Skill 和 MCP 都是在这条主链路上增加能力，不是另外三套接入方式。
 
-本文适用于 **0.4.0 的 ADK、服务认证部署**；绑定字段的 camelCase 命名仍在开发中，当前 `release/v0.4` 实现尚未接受本页的新字段名。
+本文适用于 **0.4.0 的 ADK、服务认证部署**。请求推荐使用本页列出的驼峰字段；兼容的下划线名称见[会话管理接口](../api/app.md)。
 
 ## 先看完整链路
 
@@ -16,7 +16,7 @@
 | 建立会话 | 将 Workspace、Harness、Environment 三个 ID 传给 Session 接口，可选指定 Harness 历史版本 | 读取 Harness 和 Cloud Environment，将三个 ID 和实际 Harness 版本持久化到 Session state，将配置保存在当前实例快照 | Session 响应回显绑定 ID 和 `harnessVersion` |
 | 执行对话 | 向 `/run_sse` 发送用户消息 | 从快照创建本轮 Agent，由 Runner 调用模型及可选工具 | SSE 依次返回文本、工具活动、最终消息或错误 |
 | 延续对话 | 复用 `userId` 和 `sessionId` | 从会话后端读取历史 | 追问可以使用前文，详情接口返回两轮事件 |
-| 更新配置 | 更新 Harness，并在下一条消息设置 `refresh_snapshot: true` | 读取最新 Harness 和当前 Environment，先持久化新版本，再替换快照 | 回复体现新配置，后续请求固定使用新版本 |
+| 更新配置 | 更新 Harness，并在下一条消息设置 `refreshSnapshot: true` | 读取最新 Harness 和当前 Environment，先持久化新版本，再替换快照 | 回复体现新配置，后续请求固定使用新版本 |
 
 本页先完成不依赖工具的基础闭环。基础对话成功后，在同一套 Runtime、Harness 和 Session 上选择一个分支继续实践。
 
@@ -276,7 +276,7 @@ curl --fail-with-body -sS -N \
 然后在相同消息里加入刷新字段。
 
 ```bash
-jq '.refresh_snapshot = true' check-config.json > refresh.json
+jq '.refreshSnapshot = true' check-config.json > refresh.json
 curl --fail-with-body -sS -N \
   -H "Authorization: Bearer $RUNTIME_TOKEN" "${ROUTE_HEADERS[@]}" \
   -H 'Content-Type: application/json' \
