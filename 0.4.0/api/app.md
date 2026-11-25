@@ -1,6 +1,6 @@
 # 会话管理接口
 
-本页记录 0.4.0（待发布）的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
+本页记录 0.4.0的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
 
 请求推荐使用本页列出的驼峰字段。`workspaceId`、`harnessId`、`harnessVersion`、`environmentId` 和集合创建入口的 `sessionId` 兼容对应的下划线名称；绑定字段同时提供两种名称时，值或类型不一致返回 422。新建会话不接受 `refreshSnapshot: true`；该字段兼容 `refresh_snapshot`。集合创建入口也兼容 `file_ids`；指定 ID 的创建入口请使用 `fileIds`。会话绑定和文件声明以驼峰名称保存。
 

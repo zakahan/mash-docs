@@ -1,6 +1,6 @@
 # 文件操作接口
 
-本页记录 **0.4.0（待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。已有 Ark File ID 时，也可在创建会话时声明 `fileIds`，由首次沙箱工具调用启动异步下载，见[会话输入文件](../app/sandbox.md#session-input-files)。
+本页记录 **0.4.0** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。已有 Ark File ID 时，也可在创建会话时声明 `fileIds`，由首次沙箱工具调用启动异步下载，见[会话输入文件](../app/sandbox.md#session-input-files)。
 
 先[创建会话](app.md#post-createsession)，并为会话配置 Sandbox Tool。绑定会话使用其固定版本的 Harness 快照中的 `sandbox.tool_id`；未绑定会话使用部署的 `HARNESS_SANDBOX_TOOL_ID` 或 `AGENTKIT_TOOL_ID`。没有 Tool ID 时返回 409。请求使用 Runtime 的认证方式；示例中的 Bearer Token 仅表示一种部署方式。认证身份与路径中的用户不匹配、会话不存在或应用名不符时返回 404。若 Runtime 返回 `X-Session-Id`，后续请求原样回传以维持路由亲和性。
 

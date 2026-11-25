@@ -1,6 +1,6 @@
 # 对话调用接口
 
-本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段仍使用本页列出的下划线名称。
+本页记录 0.4.0的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段仍使用本页列出的下划线名称。
 
 ## POST /run {#post-runagent}
 
