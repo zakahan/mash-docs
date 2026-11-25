@@ -1,6 +1,8 @@
 # 对话调用接口
 
-本页记录 0.4.0的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段仍使用本页列出的下划线名称。
+本页记录 0.5.0的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段使用本页列出的下划线名称；`mcp_servers` 元素也接受 Harness 标准格式的 `Name / Type / Url / headers`。
+
+本页 MCP 双格式兼容为 0.5.0 目标契约，尚待运行时实现和验证。`*` 表示相对 0.4.0 的新增或修改，不表示必填，也不属于字段名。
 
 ## POST /run {#post-runagent}
 
@@ -95,10 +97,67 @@ Content-Type: application/json
 - `harness.model_api_base` · string · 可选 — 模型 API 地址；不得指向链路本地或云元数据地址。
 - `harness.model_api_key` · string · 可选 — 模型 API 密钥。仅用于兼容历史调用方，新调用方应改用 X-Model-API-Key；两者同时提供时以 Header 为准。
 - `harness.mcp_toolset_id` · string · 可选 — MCP ToolSet ID，只能选一个，而且是本账号下的。
-- `harness.mcp_servers` · McpServer[] 
-- `harness.mcp_servers[].protocol` · streamable-http or sse · 可选 — 默认 streamable-http。
-- `harness.mcp_servers[].endpoint` · string · 必填 — HTTP(S) 地址，不允许 userinfo 或 fragment。
-- `harness.mcp_servers[].api_key` · string or null · 可选 — MCP 认证密钥。
+- `harness.mcp_servers` · McpServer[] · 可选 
+
+支持多个 MCP 服务，每个数组元素选择下面一种格式。新请求推荐使用新版格式；旧版格式用于兼容已有调用。省略时继承配置；显式提供时整体替换 MCP 选择，[] 且未提供非空 mcp_toolset_id 时禁用 MCP。
+
+
+新版格式（推荐）与 CreateHarness 一致：Name / Type / Url / headers。
+
+- `harness.mcp_servers[].Name` · string · 标准格式必填 — MCP 服务名称，建议使用稳定、可读的英文标识。
+- `harness.mcp_servers[].Type` · url · 标准格式必填 — 固定为 url，对应 streamable-http 连接。
+- `harness.mcp_servers[].Url` · string · 标准格式必填 — HTTP(S) 地址，不允许 userinfo 或 fragment。
+- `harness.mcp_servers[].headers` · object · 可选 — 标准格式；Header 名称到字符串值的映射，省略或 {} 表示无额外 Header。支持多个 Header，名称和值原样传递；禁止非法名称及 CR/LF。值按敏感配置脱敏。
+
+新版格式示例（请求体片段）：
+
+
+```json
+{
+  "harness": {
+    "mcp_servers": [
+      {
+        "Name": "orders",
+        "Type": "url",
+        "Url": "https://mcp.example.com/orders",
+        "headers": {
+          "X-API-KEY": "<api-key>"
+        }
+      }
+    ]
+  }
+}
+```
+
+
+旧版格式（兼容）使用 protocol / endpoint / api_key / api_key_header。
+
+- `harness.mcp_servers[].protocol` · streamable-http or sse · 可选 — 连接配置格式；默认 streamable-http。
+- `harness.mcp_servers[].endpoint` · string · 连接配置格式必填 — HTTP(S) 地址，不允许 userinfo 或 fragment。
+- `harness.mcp_servers[].api_key` · string or null · 可选 — 连接配置格式的认证密钥；默认使用 Authorization: Bearer，api_key_header 为 X-Api-Key 时发送原始密钥。
+- `harness.mcp_servers[].api_key_header` · Authorization or X-Api-Key · 可选 — 连接配置格式；默认 Authorization。
+
+旧版格式示例（请求体片段）：
+
+
+```json
+{
+  "harness": {
+    "mcp_servers": [
+      {
+        "protocol": "streamable-http",
+        "endpoint": "https://mcp.example.com/orders",
+        "api_key": "<api-key>",
+        "api_key_header": "X-Api-Key"
+      }
+    ]
+  }
+}
+```
+
+
+每个元素只能使用一组字段，不要把新版 Url 与旧版 endpoint、api_key 等字段写在同一个对象中，混用返回 HTTP 422。同一数组中的不同服务可分别使用新版或旧版格式。
+
 - `harness.knowledgebase` · object or null 
 - `harness.knowledgebase.index` · string or null · 可选 — 知识库索引；长度不超过 128，仅允许字母、数字、下划线、点和连字符。
 - `harness.knowledgebase.type` · string or null · 可选 — local、opensearch、redis、milvus、tos_vector、viking、context_search 或 openviking。
@@ -242,6 +301,27 @@ resources · array · 可选。结构见同页的顶层资源字段。
 }
 ```
 
+
+#### MCP 配置示例
+
+以下为完整请求体，展示同一数组中的两种元素格式。订单服务使用连接字段，`inventory` 使用 Harness 标准字段；每个服务使用各自的认证配置。
+
+```json
+{
+  "appName": "harness_agent",
+  "userId": "reader-1",
+  "sessionId": "report-1",
+  "newMessage": {"role": "user", "parts": [{"text": "查询订单和库存。"}]},
+  "harness": {
+    "mcp_servers": [
+      {"protocol": "streamable-http", "endpoint": "https://mcp.example.com/orders", "api_key": "<orders-key>"},
+      {"Name": "inventory", "Type": "url", "Url": "https://mcp.example.com/inventory", "headers": {"X-API-KEY": "<inventory-key>", "X-Tenant-ID": "tenant-a"}}
+    ]
+  }
+}
+```
+
+同一元素同时提供 `endpoint` 和 `Url`，或同时提供 `api_key` 和 `headers`，均在 SSE 建连前返回 HTTP 422。
 
 #### 请求头
 
@@ -498,51 +578,88 @@ RunAgentSSE 的 `harness` 使用此配置模型。A2A 不接受 `params.metadata
       "type": "object"
     },
     "McpServerConfig": {
-      "additionalProperties": false,
-      "description": "Direct MCP connection settings or a gateway resolved from GetMCPToolset.",
-      "properties": {
-        "protocol": {
-          "default": "streamable-http",
-          "enum": [
-            "streamable-http",
-            "sse"
-          ],
-          "title": "Protocol",
-          "type": "string"
-        },
-        "endpoint": {
-          "title": "Endpoint",
-          "type": "string"
-        },
-        "api_key": {
-          "anyOf": [
-            {
-              "format": "password",
-              "type": "string",
-              "writeOnly": true
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Api Key"
-        },
-        "api_key_header": {
-          "default": "Authorization",
-          "enum": [
-            "Authorization",
-            "X-Api-Key"
-          ],
-          "title": "Api Key Header",
-          "type": "string"
-        }
-      },
-      "required": [
-        "endpoint"
-      ],
       "title": "McpServerConfig",
-      "type": "object"
+      "description": "Choose one complete format per server. Mixed fields are rejected. 0.5.0 target contract.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Direct MCP connection settings or a gateway resolved from GetMCPToolset.",
+          "properties": {
+            "protocol": {
+              "default": "streamable-http",
+              "enum": [
+                "streamable-http",
+                "sse"
+              ],
+              "title": "Protocol",
+              "type": "string"
+            },
+            "endpoint": {
+              "title": "Endpoint",
+              "type": "string"
+            },
+            "api_key": {
+              "anyOf": [
+                {
+                  "format": "password",
+                  "type": "string",
+                  "writeOnly": true
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Api Key"
+            },
+            "api_key_header": {
+              "default": "Authorization",
+              "enum": [
+                "Authorization",
+                "X-Api-Key"
+              ],
+              "title": "Api Key Header",
+              "type": "string"
+            }
+          },
+          "required": [
+            "endpoint"
+          ],
+          "title": "McpServerConfig",
+          "type": "object"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Name",
+            "Type",
+            "Url"
+          ],
+          "properties": {
+            "Name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "Type": {
+              "type": "string",
+              "const": "url"
+            },
+            "Url": {
+              "type": "string",
+              "description": "HTTP(S) URL without userinfo or fragment."
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "writeOnly": true
+              },
+              "description": "Header names and values are preserved; reject invalid names and CR/LF."
+            }
+          }
+        }
+      ]
     },
     "RunAgentRequest": {
       "properties": {
