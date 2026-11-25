@@ -5,7 +5,7 @@
 | 相对基础流程 | 本篇做什么 |
 | --- | --- |
 | 配置 | 将 MCP 服务写入已有 Harness |
-| 生效 | 在下一次 `/run_sse` 请求中设置 `refresh_snapshot: true` |
+| 生效 | 在下一次 `/run_sse` 请求中设置 `refreshSnapshot: true` |
 | 执行 | 模型发现工具、生成参数，Harness App 连接 MCP 服务并返回结果 |
 | 验收 | 同时核对 `functionCall`、`functionResponse` 和最终回复中的业务数据 |
 
@@ -67,7 +67,7 @@ MCP 将远程服务的能力提供为模型可调用的工具。应用仍然只�
 让已有会话取得新服务列表，并提出一个必须访问该服务的任务。
 
 ```bash
-jq '.refresh_snapshot = true | .newMessage.parts = [{text:"请调用订单查询工具，查询昨天的订单数量。返回实际查询日期和工具提供的数量；查询失败时报告失败原因。"}]' \
+jq '.refreshSnapshot = true | .newMessage.parts = [{text:"请调用订单查询工具，查询昨天的订单数量。返回实际查询日期和工具提供的数量；查询失败时报告失败原因。"}]' \
   message.json > mcp-message.json
 curl --fail-with-body -sS -N \
   -H "Authorization: Bearer $RUNTIME_TOKEN" "${ROUTE_HEADERS[@]}" \

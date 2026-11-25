@@ -2,13 +2,13 @@
 
 本页记录 0.4.0（待发布）的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
 
-**开发中：**本页的 `workspaceId`、`harnessId`、`harnessVersion`、`environmentId` 是 0.4.0 目标请求与会话状态字段；当前 `release/v0.4` 实现仍使用 snake_case。待运行时改动合入并验证后按本页示例调用。
+请求推荐使用本页列出的驼峰字段。`workspaceId`、`harnessId`、`harnessVersion`、`environmentId` 和集合创建入口的 `sessionId` 兼容对应的下划线名称；绑定字段同时提供两种名称时，值或类型不一致返回 422。新建会话不接受 `refreshSnapshot: true`；该字段兼容 `refresh_snapshot`。集合创建入口也兼容 `file_ids`；指定 ID 的创建入口请使用 `fileIds`。会话绑定和文件声明以驼峰名称保存。
 
 创建会话后，通过[对话调用接口](chat.md)发送消息；需要直接操作沙箱中的文件时，使用[文件操作接口](files.md)。
 
 ### 绑定会话与认证
 
-0.3.1的两个创建入口都可以用三个顶层 ID 绑定会话。调用方先通过 [CreateHarness](harness.md#createharness) 取得 Harness ID，再选择同一 Workspace 的 Environment。Runtime 负责认证入站请求。Harness App 使用部署的服务身份调用 `agentkit:GetHarness` 和 `agentkit:GetEnvironment`。启用或强制共享身份的部署在创建绑定会话时返回 422。
+本版本的两个创建入口都可以用三个顶层 ID 绑定会话。调用方先通过 [CreateHarness](harness.md#createharness) 取得 Harness ID，再选择同一 Workspace 的 Environment。Runtime 负责认证入站请求。Harness App 使用部署的服务身份调用 `agentkit:GetHarness` 和 `agentkit:GetEnvironment`。启用或强制共享身份的部署在创建绑定会话时返回 422。
 
 两个资源都须为 `Active`，且 Environment 的 `Config.Type` 为 `Cloud`、顶层 `ToolId` 非空。两项查询和配置校验均成功后，App 将三个 ID 和 `GetHarness` 返回的实际版本随会话 state 保存，将解析出的模型、指令、Skills、MCP 和沙箱配置放入当前实例的内存。快照按应用、用户和会话 ID 区分，创建响应回显绑定 ID、`harnessVersion` 和会话自身的数据。控制面快照和其中的凭据不会写入会话存储。
 
@@ -56,6 +56,7 @@
 | `[].state.harnessId` | string | Body | 否 | 绑定会话使用的 Harness；旧会话或未绑定会话可缺省。 |
 | `[].state.harnessVersion` | integer | Body | 否 | Session 固定的 Harness 版本；绑定会话存在，旧会话或未绑定会话可缺省。 |
 | `[].state.environmentId` | string | Body | 否 | 绑定会话使用的 Environment；旧会话或未绑定会话可缺省。 |
+| `[].state.fileIds` | string[] | Body | 否 | 创建时声明的文件 ID；旧会话可缺省。 |
 | `[].state.{key}` | any | Body | 否 | 业务自定义状态项。 |
 | `[].events` | Event[] | Body | 是 | 按发生顺序保存的会话事件；可为空数组。 |
 | `[].lastUpdateTime` | number | Body | 是 | 最近更新时间，Unix 秒时间戳；未发生更新时可为 `0`。 |
@@ -86,9 +87,10 @@ GET /apps/harness_agent/users/reader-1/sessions
 | `harnessId` | string | Body | 绑定时必填 | CreateHarness 返回的 Harness ID。 |
 | `harnessVersion` | integer | Body | 否 | 指定 Harness 历史版本的正整数；省略时选择创建时的最新版本，并持久化实际返回版本。仅在三个绑定 ID 完整时允许。 |
 | `environmentId` | string | Body | 绑定时必填 | 用于解析沙箱 ToolId 的 Environment ID。 |
+| `fileIds` | string[] | Body | 否 | 默认 `[]`。最多 100 个 Ark File ID，按原顺序去重；每项 1–128 个字符，以字母或数字开头，其余仅允许字母、数字、点、下划线和连字符，不接受 null。非空时须提供三个绑定 ID，且绑定配置使用 ADK 和 AIO Sandbox。下载时机见下文。 |
 | `id` | string 或 null | Body | 否 | 显式会话 ID，非空时优先于 sessionId。 |
 | `sessionId` | string or null | Body | 否 | 指定会话 ID；省略或为 `null` 时由服务端生成。 |
-| `state` | object or null | Body | 否 | 初始会话状态。 |
+| `state` | object or null | Body | 否 | 初始会话状态；不能在其中声明 `fileIds`。 |
 | `state.{key}` | any | Body | 否 | 业务自定义状态项。 |
 | `events` | Event[] or null | Body | 否 | 初始化到会话中的事件列表。 |
 | `skills` | object[]、JSON 数组字符串或 null | Body | 否 | 非空时作为会话级技能包保存，优先于控制面快照的 Skills。省略、null 或空数组时尝试 resources。 |
@@ -110,6 +112,7 @@ GET /apps/harness_agent/users/reader-1/sessions
 | `state.harnessId` | string | Body | 绑定时必返 | 创建时选定的 Harness。 |
 | `state.harnessVersion` | integer | Body | 绑定时必返 | `GetHarness` 返回且已持久化的实际版本；即使创建请求未指定版本也返回。 |
 | `state.environmentId` | string | Body | 绑定时必返 | 创建时选定的 Environment。 |
+| `state.fileIds` | string[] | Body | 是 | 创建时声明的文件 ID；未声明时为 `[]`。 |
 | `state.{key}` | any | Body | 否 | 业务自定义状态项。 |
 | `events` | Event[] | Body | 是 | 会话事件；可为空数组。 |
 | `lastUpdateTime` | number | Body | 是 | 最近更新时间，Unix 秒时间戳。 |
@@ -125,7 +128,7 @@ Content-Type: application/json
 
 示例明确选择 Harness v1。省略 `harnessVersion` 时，服务选择创建时的最新版本；无论是否指定，响应都会在 `state.harnessVersion` 中返回并保存实际版本。
 
-HTTP 200 返回创建的会话，保存服务端分配的 `id`。仅在 state 中传绑定 ID 或 `harnessVersion`、与顶层字段冲突、单独指定版本，或版本不是正整数时，返回 422。使用 `{}` 可由服务分配 ID。镜像的集合创建入口也接受正文 `id`，同时提供时优先使用非空的 `id`。
+HTTP 200 返回创建的会话，保存服务端分配的 `id`。在 state 中传 `fileIds`、仅在 state 中传绑定 ID 或 `harnessVersion`、与顶层字段冲突、单独指定版本，或版本不是正整数时，返回 422。使用 `{}` 可由服务分配 ID。镜像的集合创建入口也接受正文 `id`，同时提供时优先使用非空的 `id`。
 
 响应示例：
 
@@ -139,6 +142,7 @@ HTTP 200 返回创建的会话，保存服务端分配的 `id`。仅在 state �
     "harnessId": "<harness-id>",
     "harnessVersion": 1,
     "environmentId": "<environment-id>",
+    "fileIds": [],
     "report": "Q1"
   },
   "events": [],
@@ -165,6 +169,7 @@ HTTP 200 返回创建的会话，保存服务端分配的 `id`。仅在 state �
 | `harnessId` | string | Body | 绑定时必填 | CreateHarness 返回的 Harness ID。 |
 | `harnessVersion` | integer | Body | 否 | 指定 Harness 历史版本的正整数；省略时选择创建时的最新版本，并持久化实际返回版本。仅在三个绑定 ID 完整时允许。 |
 | `environmentId` | string | Body | 绑定时必填 | 用于解析沙箱 ToolId 的 Environment ID。 |
+| `fileIds` | string[] | Body | 否 | 默认 `[]`。最多 100 个 Ark File ID，按原顺序去重；每项 1–128 个字符，以字母或数字开头，其余仅允许字母、数字、点、下划线和连字符，不接受 null。非空时须提供三个绑定 ID，且绑定配置使用 ADK 和 AIO Sandbox。下载时机见下文。 |
 | `skills` | object[]、JSON 数组字符串或 null | Body | 否 | 非空时作为会话级技能包保存，优先于控制面快照的 Skills。省略、null 或空数组时尝试 resources。 |
 | `resources` | object[]、JSON 数组字符串或 null | Body | 否 | 兼容字段。skills 为空时选用非空的 resources，两者均为空时绑定会话使用快照中的 Skills。 |
 | 其他顶层键 | any | Body | 否 | 直接作为初始 state 的业务字段。未绑定时，skills 和 resources 也作为普通状态键保存。 |
@@ -182,6 +187,7 @@ HTTP 200 返回创建的会话，保存服务端分配的 `id`。仅在 state �
 | `state.harnessId` | string | Body | 绑定时必返 | 创建时选定的 Harness。 |
 | `state.harnessVersion` | integer | Body | 绑定时必返 | `GetHarness` 返回且已持久化的实际版本；即使创建请求未指定版本也返回。 |
 | `state.environmentId` | string | Body | 绑定时必返 | 创建时选定的 Environment。 |
+| `state.fileIds` | string[] | Body | 是 | 创建时声明的文件 ID；未声明时为 `[]`。 |
 | `state.{key}` | any | Body | 否 | 业务自定义状态项。 |
 | `events` | Event[] | Body | 是 | 会话事件；可为空数组。 |
 | `lastUpdateTime` | number | Body | 是 | 最近更新时间，Unix 秒时间戳。 |
@@ -198,6 +204,10 @@ Content-Type: application/json
 示例明确选择 Harness v1。省略 `harnessVersion` 时选择创建时的最新版本，并在响应的 `state.harnessVersion` 中返回实际版本。
 
 HTTP 200 返回会话对象，结构见上一节响应示例，`id` 取自路径。重复创建同一 ID 返回 409。该入口直接接收初始状态对象，业务字段写在顶层。要导入历史事件，请使用集合创建入口。
+
+两个创建入口都只保存 `fileIds` 声明，不在创建时下载。首次通过 `/run_sse` 调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，文件须为 `active` 且 `purpose=agent`，并带有 HTTPS 下载地址。下载任务被沙箱接受后即继续执行，不等待文件下载完成。文件路径为 `/workspace/uploads/<fileId>`；过早读取可能不存在，后台失败也不会自动重试。需部署包含 `/usr/local/bin/ve-load-files` 的配套沙箱镜像；文件声明不可通过 `stateDelta` 修改。完整流程见[会话输入文件](../app/sandbox.md#session-input-files)。
+
+例如，在创建请求的顶层加入 `"fileIds":["file-report","file-data"]`，响应的 `state.fileIds` 返回相同列表。非空列表用于未绑定会话或非 ADK 沙箱配置时返回 422；该声明不受[上传接口](files.md#post-uploadsessionfile)的 8 MiB 限制。
 
 ## GET /apps/{appName}/users/{userId}/sessions/{sessionId} {#get-getsession}
 
@@ -230,6 +240,7 @@ HTTP 200 返回会话对象，结构见上一节响应示例，`id` 取自路径
 | `state.harnessId` | string | Body | 否 | 绑定会话使用的 Harness；旧会话或未绑定会话可缺省。 |
 | `state.harnessVersion` | integer | Body | 否 | Session 固定的 Harness 版本；旧会话或未绑定会话可缺省。 |
 | `state.environmentId` | string | Body | 否 | 绑定会话使用的 Environment；旧会话或未绑定会话可缺省。 |
+| `state.fileIds` | string[] | Body | 否 | 创建时声明的文件 ID；旧会话可缺省。 |
 | `state.{key}` | any | Body | 否 | 业务自定义状态项。 |
 | `events` | Event[] | Body | 是 | 历史事件数组；可为空数组。 |
 | `lastUpdateTime` | number | Body | 是 | 最近更新时间，Unix 秒时间戳。 |
@@ -254,6 +265,7 @@ GET /apps/harness_agent/users/reader-1/sessions/report-1
     "harnessId": "<harness-id>",
     "harnessVersion": 1,
     "environmentId": "<environment-id>",
+    "fileIds": [],
     "report": "Q1"
   },
   "events": [],
@@ -279,7 +291,7 @@ GET /apps/harness_agent/users/reader-1/sessions/report-1
 | `userId` | string | Path | 是 | 会话所属用户标识。 |
 | `sessionId` | string | Path | 是 | 会话标识。 |
 | `stateDelta` | object | Body | 是 | 要合并到当前会话状态的字段集合。 |
-| `stateDelta.{key}` | any | Body | 否 | 要新增或覆盖的业务状态项。三个绑定 ID 和 `harnessVersion` 由服务端维护，状态增量包含其中任意键会返回 422。 |
+| `stateDelta.{key}` | any | Body | 否 | 要新增或覆盖的业务状态项。三个绑定 ID、`harnessVersion` 和 `fileIds` 由服务端维护，状态增量包含其中任意键或对应下划线名称会返回 422。 |
 
 **响应字段**
 

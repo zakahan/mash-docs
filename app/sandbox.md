@@ -27,9 +27,9 @@ curl --fail-with-body -sS -N \
 下面是模型选择 `WriteFile` 时经过裁剪的关键事件。实际调用 ID、工具组合和文本分片会变化；模型也可能使用 `Execute` 完成同一任务。
 
 ```text
-data: {"partial":false,"content":{"role":"model","parts":[{"functionCall":{"id":"call_1","name":"WriteFile","args":{"path":"/home/gem/orders.csv","content":"city,amount\n北京,120\n上海,80\n"}}}]}}
+data: {"partial":false,"content":{"role":"model","parts":[{"functionCall":{"id":"call_1","name":"WriteFile","args":{"path":"/workspace/orders.csv","content":"city,amount\n北京,120\n上海,80\n"}}}]}}
 
-data: {"content":{"role":"user","parts":[{"functionResponse":{"id":"call_1","name":"WriteFile","response":{"status":"ok","message":"Wrote /home/gem/orders.csv"}}}]}}
+data: {"content":{"role":"user","parts":[{"functionResponse":{"id":"call_1","name":"WriteFile","response":{"status":"ok","message":"Wrote /workspace/orders.csv"}}}]}}
 
 data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[{"text":"已创建并读回 orders.csv，包含北京 120、上海 80。"}]}}
 ```
@@ -59,12 +59,28 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 
 **验收：** 工具结果的 `status` 为 `ok`、标准输出包含 `200`，最终回复与工具结果一致。第二轮没有重新上传文件，因此成功读到数据也验证了同一会话下的沙箱复用。工具选择由模型决定，本文的文件内容和计算结果才是稳定的验收目标。
 
+## 会话输入文件 {#session-input-files}
+
+已有 Ark File ID 时，可在[创建会话](../api/app.md#post-createsession)的顶层传入 `fileIds`。两个创建入口均支持，最多 100 项并按原顺序去重；非空列表要求会话绑定 ADK AIO 沙箱。ID 声明保存为 `state.fileIds`，不能通过后续状态更新替换。
+
+```json
+{"workspaceId":"<workspace-id>","harnessId":"<harness-id>","environmentId":"<environment-id>","fileIds":["file-report","file-data"]}
+```
+
+创建成功表示文件声明已保存。之后通过 `/run_sse` 让模型读取 `/workspace/uploads/file-report`；首次调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，要求文件为 `active`、`purpose=agent` 且有 HTTPS 下载地址，再向沙箱提交异步下载任务。API Key 留在 Runtime，沙箱接收文件 ID、下载地址和大小。
+
+沙箱镜像须提供配套的 `/usr/local/bin/ve-load-files`。任务被接受后，Runtime 立即继续工具执行，不轮询下载进度；下载完成的文件以原子方式落到 `/workspace/uploads/<fileId>`。因此，首次读取可能因文件尚未就绪而失败，应稍后再读；后台下载失败后没有自动重试。已接受的启动在当前物理沙箱和文件列表下复用，替换沙箱后会重新准备。
+
+默认工作目录为 `/workspace`。部署可以通过 `VEADK_AIO_WORKSPACE` 调整普通工具的工作目录，但当前配套文件加载器要求使用 `/workspace/uploads`。文件加载器每文件上限 512 MiB、每批上限 1 GiB、下载时限 600 秒；这些限制依赖配套沙箱镜像。
+
+需要直接发送本地文件时，使用[文件操作接口](../api/files.md#post-uploadsessionfile)上传至会话沙箱；该接口单文件上限 8 MiB，成功响应表示写入完成。
+
 ## 读取沙箱图片并交给视觉模型
 
 在 **0.4.0** 中，ADK 的 `ReadFile` 可读取沙箱中的 PNG、JPEG、WebP 和 GIF 图片。把图片放在工作目录后，让模型调用 `ReadFile` 并提供文件路径；工具依据扩展名判断图片类型，再核对实际文件签名。只有类型一致且内容不超过 **5 MiB** 时，工具才返回 `status: ok` 和 `content` 中的 base64 图片块。图片不支持 `start_line`、`end_line` 行范围；类型不符、超限、文件不存在等情况在工具结果中返回 `status: error`。
 
 ```json
-{"path":"/home/gem/chart.png"}
+{"path":"/workspace/chart.png"}
 ```
 
 成功的 `functionResponse.response` 形态如下，`data` 是实际图片字节的 base64；这里用占位文本表示，不应按字面发送：

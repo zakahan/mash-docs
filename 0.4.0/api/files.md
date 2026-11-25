@@ -1,10 +1,10 @@
 # 文件操作接口
 
-本页记录 **0.4.0（待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。
+本页记录 **0.4.0（待发布）** 的 Harness App 会话文件接口。路径相对于已授权的 Runtime 地址；示例使用应用 `harness_agent`、用户 `reader-1`、会话 `report-1`。三个接口操作的是该会话绑定的 **AIO 沙箱文件**，不创建 ADK 产物，也不返回对象存储 URL。已有 Ark File ID 时，也可在创建会话时声明 `fileIds`，由首次沙箱工具调用启动异步下载，见[会话输入文件](../app/sandbox.md#session-input-files)。
 
 先[创建会话](app.md#post-createsession)，并为会话配置 Sandbox Tool。绑定会话使用其固定版本的 Harness 快照中的 `sandbox.tool_id`；未绑定会话使用部署的 `HARNESS_SANDBOX_TOOL_ID` 或 `AGENTKIT_TOOL_ID`。没有 Tool ID 时返回 409。请求使用 Runtime 的认证方式；示例中的 Bearer Token 仅表示一种部署方式。认证身份与路径中的用户不匹配、会话不存在或应用名不符时返回 404。若 Runtime 返回 `X-Session-Id`，后续请求原样回传以维持路由亲和性。
 
-相对文件路径以沙箱工作目录为基准，默认是 `/home/gem`；绝对路径原样使用并规范化。路径中不能包含 NUL 或控制字符。文件接口会在首次操作时取得沙箱 Endpoint；实例重启后会按会话标识查找仍有效的物理沙箱并重新附着。沙箱已过期时可能创建新沙箱，旧文件随旧沙箱失效。同一会话正在执行其他沙箱操作时，文件接口返回 409。
+相对文件路径以沙箱工作目录为基准，默认是 `/workspace`；绝对路径原样使用并规范化。路径中不能包含 NUL 或控制字符。文件接口会在首次操作时取得沙箱 Endpoint；实例重启后会按会话标识查找仍有效的物理沙箱并重新附着。沙箱已过期时可能创建新沙箱，旧文件随旧沙箱失效。同一会话正在执行其他沙箱操作时，文件接口返回 409。
 
 ## POST /apps/{appName}/users/{userId}/sessions/{sessionId}/files {#post-uploadsessionfile}
 
@@ -31,7 +31,7 @@
 ```bash
 curl --fail-with-body -X POST \
   -H "Authorization: Bearer $RUNTIME_TOKEN" \
-  -F 'path=/home/gem' \
+  -F 'path=/workspace' \
   -F 'file=@./note.txt;filename=note.txt;type=text/plain' \
   "$RUNTIME_URL/apps/harness_agent/users/reader-1/sessions/report-1/files"
 ```
@@ -53,7 +53,7 @@ curl --fail-with-body -X POST \
 ```json
 {
   "name": "note.txt",
-  "path": "/home/gem/note.txt",
+  "path": "/workspace/note.txt",
   "size": 5,
   "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
   "toolId": "tool-example"
@@ -109,11 +109,11 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "path": "/home/gem",
+  "path": "/workspace",
   "files": [
     {
       "name": "note.txt",
-      "path": "/home/gem/note.txt",
+      "path": "/workspace/note.txt",
       "isDirectory": false,
       "size": 5,
       "modifiedTime": null

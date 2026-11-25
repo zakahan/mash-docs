@@ -1,6 +1,6 @@
 # 对话调用接口
 
-本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。绑定字段的 camelCase 命名仍在开发中，状态见[会话管理接口](app.md)。
+本页记录 0.4.0（待发布）的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段仍使用本页列出的下划线名称。
 
 ## POST /run {#post-runagent}
 
@@ -82,8 +82,8 @@ Content-Type: application/json
 
 请求体
 
-- `harnessVersion` · integer · 可选 — 续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 refresh_snapshot: true 互斥。
-- `refresh_snapshot` · boolean · 可选 · 默认值 false — 传 true 时，用原绑定获取最新 Harness 和当前 Environment，成功后持久化实际版本、替换快照并执行本轮。字符串和 null 返回 422。
+- `harnessVersion` · integer · 可选 — 续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 refreshSnapshot: true 互斥。
+- `refreshSnapshot` · boolean · 可选 · 默认值 false — 传 true 时，用原绑定获取最新 Harness 和当前 Environment，成功后持久化实际版本、替换快照并执行本轮。字符串和 null 返回 422。
 - `harness` · object · 可选 设置本轮 Harness Agent 使用的模型、指令和工具。
 - `harness.model_name` · string · 可选 — 模型名称；绑定会话省略时沿用快照，未绑定时沿用部署配置。
 - `harness.system_prompt` · string · 可选 — 系统提示词。
@@ -103,7 +103,7 @@ Content-Type: application/json
 - `harness.knowledgebase.index` · string or null · 可选 — 知识库索引；长度不超过 128，仅允许字母、数字、下划线、点和连字符。
 - `harness.knowledgebase.type` · string or null · 可选 — local、opensearch、redis、milvus、tos_vector、viking、context_search 或 openviking。
 - `harness.sandbox` · object or null 
-- `harness.sandbox.tool_id` · string or null · 可选 — Sandbox Tool ID；部署设置 allowlist 时必须在 allowlist 内。
+- `harness.sandbox.tool_id` · string or null · 可选 — Sandbox Tool ID；部署设置 allowlist 时必须在 allowlist 内。绑定会话不能改为快照之外的 Tool ID，否则返回 422；调整 TTL 时省略此字段。
 - `harness.sandbox.ttl` · int or null · 可选 — Session TTL，范围 60–86400 秒。
 - `harness.registry_space_id` · string · 可选 — A2A Registry Space 标识。
 - `harness.registry_endpoint` · string · 可选 — A2A Registry 地址。
@@ -190,7 +190,7 @@ resources · array · 可选。结构见同页的顶层资源字段。
 - `newMessage.parts[].audioTranscription.words[].endOffset` · string or null · 可选 — 相对音频开始的结束偏移。
 - `appName` · string or null · 可选 — 应为 harness_agent；兼容输入 app_name。
 - `streaming` · boolean · 可选 — 是否要求模型流式生成。请求级 Harness 适配器在省略时选择流式；建议调用方显式传值。
-- `stateDelta` · object or null · 可选 — 本轮执行前合并到 Session 的状态增量；兼容输入 state_delta。不得修改三个绑定 ID 或 harnessVersion。
+- `stateDelta` · object or null · 可选 — 本轮执行前合并到 Session 的状态增量；兼容输入 state_delta。不得修改三个绑定 ID、harnessVersion 或 fileIds，也不得通过对应下划线名称修改。
 - `functionCallEventId` · string or null · 可选 — 续接函数调用时对应的事件 ID。
 - `invocationId` · string or null · 可选 — 调用标识；省略时由服务端生成。
 - `customMetadata` · object or null · 可选 — 调用方自定义元数据。
@@ -234,7 +234,7 @@ resources · array · 可选。结构见同页的顶层资源字段。
     "parts": [{"text": "总结本周报告。"}]
   },
   "streaming": true,
-  "refresh_snapshot": true,
+  "refreshSnapshot": true,
   "harness": {
     "system_prompt": "用三条要点回复。",
     "max_llm_calls": 3
@@ -265,9 +265,9 @@ data: {"partial":false,"content":{"parts":[{"text":"甲乙"}]}}
 
 | 本轮请求 | App 的处理方式 |
 |---|---|
-| 省略 `refresh_snapshot` 或传 `false` | 使用 Session 固定版本对应的快照。实例内没有匹配缓存时，按 `state.harnessVersion` 自动查询历史版本并重建，然后执行本轮；不会升级到最新版本。 |
-| 传 `refresh_snapshot: true` | 用已保存的三个 ID 查询最新 Harness 和当前 Environment，校验成功后先持久化实际版本，再替换快照并执行消息。任一步失败都保留原版本和原快照，本轮在建连前结束。未绑定会话请求刷新返回 409。 |
-| 显式提供 `harnessVersion` | 仅用于断言版本，必须是正整数并与 Session 固定版本相同。不能切换版本，也不能与 `refresh_snapshot: true` 同时提供；冲突返回 422。 |
+| 省略 `refreshSnapshot` 或传 `false` | 使用 Session 固定版本对应的快照。实例内没有匹配缓存时，按 `state.harnessVersion` 自动查询历史版本并重建，然后执行本轮；不会升级到最新版本。 |
+| 传 `refreshSnapshot: true` | 用已保存的三个 ID 查询最新 Harness 和当前 Environment，校验成功后先持久化实际版本，再替换快照并执行消息。任一步失败都保留原版本和原快照，本轮在建连前结束。未绑定会话请求刷新返回 409。 |
+| 显式提供 `harnessVersion` | 仅用于断言版本，必须是正整数并与 Session 固定版本相同。不能切换版本，也不能与 `refreshSnapshot: true` 同时提供；冲突返回 422。 |
 | 提供 `harness` | 在本轮使用的快照上应用显式字段，省略的字段继承快照。sandbox、knowledgebase 对象按子字段合并，数组整体替换。若同时刷新，先取新快照。请求覆盖只对本轮有效。 |
 | 覆盖模型地址且快照含密钥 | 若 `harness.model_api_base` 与快照不同，必须显式提供本轮凭证，优先使用 `X-Model-API-Key`。即使快照已有密钥，省略本轮凭证也会在建连前返回 422。 |
 
@@ -312,7 +312,7 @@ session_id: report-1
 
 ## Harness 配置结构 {#harness-overrides}
 
-RunAgentSSE 的 `harness` 与 A2A 的 `params.metadata.harness` 使用此配置模型。
+RunAgentSSE 的 `harness` 使用此配置模型。A2A 不接受 `params.metadata.harness`，其配置由绑定的 Harness 解析。
 
 <details>
 <summary>HarnessOverrides JSON Schema</summary>
@@ -690,12 +690,12 @@ A2A 消息调用 · `message/send`
 | `params.metadata` | object | Body | 首轮条件必填 | Harness 绑定字段放在这里，不放在 message.metadata。首轮必须提供三个 ID；续聊不刷新时可省略。 |
 | `params.metadata.workspaceId` | string | Body | 首轮必填 | 资源所属 Workspace；三个 ID 必须一起提供。 |
 | `params.metadata.harnessId` | string | Body | 首轮必填 | 在该 Workspace 内读取的 Harness ID。 |
-| `params.metadata.harnessVersion` | integer | Body | 否 | 首轮可指定正整数版本，省略时选择最新；续聊提供时必须与固定版本一致。与 `refresh_snapshot: true` 互斥。 |
+| `params.metadata.harnessVersion` | integer | Body | 否 | 首轮可指定正整数版本，省略时选择最新；续聊提供时必须与固定版本一致。与 `refreshSnapshot: true` 互斥。 |
 | `params.metadata.environmentId` | string | Body | 首轮必填 | 同一 Workspace 下的 Active Cloud Environment ID。 |
-| `params.metadata.refresh_snapshot` | boolean | Body | 否 | 默认 false。续聊传 true 时按原绑定升级到最新 Harness 并持久化版本；首轮不接受 true。 |
+| `params.metadata.refreshSnapshot` | boolean | Body | 否 | 默认 false。续聊传 true 时按原绑定升级到最新 Harness 并持久化版本；首轮不接受 true。 |
 | `params.metadata.judge` | boolean | Body | 否 | 默认 false。Harness 扩展：开启沙箱产物收集能力。必须使用 adk runtime 且配置 sandbox.tool_id（本轮或部署配置）；执行时要求恰好一个 AIO sandbox toolset。字符串和 null 均不合法。 |
 
-公共入站认证沿用部署的 Runtime KeyAuth 配置。A2A 不接受 `/run_sse` 的顶层 `userId`、`sessionId`、`refresh_snapshot` 或 `harness` object；绑定、版本和刷新字段均放在 `params.metadata`。续聊通过 `contextId` 关联原 Session，普通消息按固定版本恢复，显式刷新才推进到最新版本。
+公共入站认证沿用部署的 Runtime KeyAuth 配置。A2A 不接受 `/run_sse` 的顶层 `userId`、`sessionId`、`refreshSnapshot` 或 `harness` object；绑定、版本和刷新字段均放在 `params.metadata`，推荐使用表中的驼峰名称；兼容对应下划线名称，同时提供两种名称且值或类型不一致时返回参数错误。续聊通过 `contextId` 关联原 Session，普通消息按固定版本恢复，显式刷新才推进到最新版本。
 
 **响应字段**
 
