@@ -13,6 +13,11 @@ function exportTree(html) {
     if (node.is('details')) {
       const summary = node.children('summary');
       const name = summary.children('code').first().text();
+      if (!name) {
+        lines.push('\n' + summary.text() + '\n');
+        node.children().not('summary').each((_, child) => visit(child, prefix));
+        return;
+      }
       const variant = ['openviking_context', 'external_skill_package'].includes(name);
       const field = variant ? prefix : [prefix, name].filter(Boolean).join('.');
       lines.push('- `' + (variant ? name : field) + '` · ' + summary.children('small').text() + ' ' + summary.children('span').text());
