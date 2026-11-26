@@ -21,7 +21,7 @@ function exportTree(html) {
       const variant = ['openviking_context', 'external_skill_package'].includes(name);
       const field = variant ? prefix : [prefix, name].filter(Boolean).join('.');
       lines.push('- `' + (variant ? name : field) + '` · ' + summary.children('small').text() + ' ' + summary.children('span').text());
-      const childPath = ['mcp_servers', 'resources'].includes(name) ? field + '[]' : field;
+      const childPath = ['mcp_servers', 'resources', 'tools'].includes(name) ? field + '[]' : field;
       node.children().not('summary').each((_, child) => visit(child, childPath));
     } else if (node.is('.api-property')) {
       const dt = node.children('dt');

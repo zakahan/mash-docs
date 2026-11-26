@@ -16,7 +16,7 @@
 沿用[实战教学](flow.md)中的 Runtime、会话和终端变量。这个练习会在绑定的 Cloud 沙箱里创建 `orders.csv`，再从下一轮读取它。请求成功与工具执行成功分别检查，文件内容以工具返回为准。
 
 ```bash
-jq '.newMessage.parts = [{text:"请调用沙箱工具，在工作目录创建 orders.csv，内容为 city,amount 换行 北京,120 换行 上海,80。写完后读回，核对文件内容。"}]' \
+jq '.harness.tools = "bash,read,write" | .newMessage.parts = [{text:"请调用沙箱工具，在工作目录创建 orders.csv，内容为 city,amount 换行 北京,120 换行 上海,80。写完后读回，核对文件内容。"}]' \
   message.json > sandbox-write.json
 curl --fail-with-body -sS -N \
   -H "Authorization: Bearer $RUNTIME_TOKEN" "${ROUTE_HEADERS[@]}" \
@@ -39,7 +39,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 下一轮沿用相同会话，让模型从文件计算合计。
 
 ```bash
-jq '.newMessage.parts = [{text:"读取刚才的 orders.csv，用沙箱执行命令计算 amount 的合计，并返回命令结果。"}]' \
+jq '.harness.tools = "bash,read,write" | .newMessage.parts = [{text:"读取刚才的 orders.csv，用沙箱执行命令计算 amount 的合计，并返回命令结果。"}]' \
   message.json > sandbox-read.json
 curl --fail-with-body -sS -N \
   -H "Authorization: Bearer $RUNTIME_TOKEN" "${ROUTE_HEADERS[@]}" \
@@ -67,9 +67,9 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 {"workspaceId":"<workspace-id>","harnessId":"<harness-id>","environmentId":"<environment-id>","fileIds":["file-report","file-data"]}
 ```
 
-创建成功表示文件声明已保存。之后通过 `/run_sse` 让模型读取 `/workspace/uploads/file-report`；首次调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，要求文件为 `active`、`purpose=agent` 且有 HTTPS 下载地址，再向沙箱提交异步下载任务。API Key 留在 Runtime，沙箱接收文件 ID、下载地址和大小。
+创建成功表示文件声明已保存。之后通过 `/run_sse` 让模型读取 `/workspace/uploads/file-report/report.pdf`（假设原文件名为 report.pdf）；首次调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，要求文件为 `active`、`purpose=agent` 且有 HTTPS 下载地址，再向沙箱提交异步下载任务。API Key 留在 Runtime，沙箱接收文件 ID、下载地址和大小。
 
-沙箱镜像须提供配套的 `/usr/local/bin/ve-load-files`。任务被接受后，Runtime 立即继续工具执行，不轮询下载进度；下载完成的文件以原子方式落到 `/workspace/uploads/<fileId>`。因此，首次读取可能因文件尚未就绪而失败，应稍后再读；后台下载失败后没有自动重试。已接受的启动在当前物理沙箱和文件列表下复用，替换沙箱后会重新准备。
+沙箱镜像须提供配套的 `/usr/local/bin/ve-load-files`。任务被接受后，Runtime 立即继续工具执行，不轮询下载进度；下载完成的文件以原子方式落到 `/workspace/uploads/<fileId>/<filename>`。因此，首次读取可能因文件尚未就绪而失败，应稍后再读；后台下载失败后没有自动重试。已接受的启动在当前物理沙箱和文件列表下复用，替换沙箱后会重新准备。
 
 默认工作目录为 `/workspace`。部署可以通过 `VEADK_AIO_WORKSPACE` 调整普通工具的工作目录，但当前配套文件加载器要求使用 `/workspace/uploads`。文件加载器每文件上限 512 MiB、每批上限 1 GiB、下载时限 600 秒；这些限制依赖配套沙箱镜像。
 
@@ -113,7 +113,7 @@ Harness Chat 和 OBO 的 Chat Completions 模型调用会把工具图片转换�
 
 ![首次沙箱调用经过AgentKit 控制面获取地址，后续工具操作直接访问沙箱数据面](/img/0.2.0/harness-sandbox-call.svg)
 
-1. **向模型提供工具。** Harness App 按部署配置及入口允许的请求参数准备 Harness Agent。启用 AIO 后，工具集给模型提供四个工具的名称和参数声明。若配置 Skill，准备模型请求时还可读取技能目录信息。
+1. **向模型提供工具。** Harness App 按部署配置及入口允许的请求参数准备 Harness Agent。启用 AIO 后，工具集仅声明选中的沙箱工具。除四种原生工具外，还可启用 grep（正则搜索文本）和 glob（按模式列出路径）。若配置 Skill，准备模型请求时还可读取技能目录信息。
 2. **从对话定位 Endpoint。** 模型发起沙箱工具调用后，执行器从工具上下文读取应用、用户和会话，在进程内串行处理同一绑定。首次使用时先按稳定的 `UserSessionId` 查询仍有效的沙箱；没有匹配项才向 AgentKit 控制面发送 `CreateSession`，参数包括 `ToolId`、`UserSessionId` 和 `Ttl`。取得可用 Endpoint 后缓存。
 3. **把操作发到沙箱数据面。** 读取文本走 `/v1/file/read`，写入走 `/v1/file/write`。执行命令时，适配器先在工作目录创建 Bash 会话，再向 `/v1/bash/exec` 提交命令；需要等待时读取命令输出，最后取得标准输出、标准错误和退出码。文件路径相对于沙箱工作目录解析。调用方机器上的同名文件不会自动出现在该目录。
 4. **继续模型执行。** 原生 ADK 工具将结果交回 Runner。模型可继续选工具，也可生成回答。前端沿原来的 Harness App 连接消费[流式事件](features.md)，无需自行构造沙箱 HTTP 请求。

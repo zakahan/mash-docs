@@ -22,7 +22,9 @@
 
 公开包由 App 在本轮装配时下载。对于 `Type: "custom"`，App 将完整的 `SkillId` 转为沙箱引用（例如 `ss-demo:s-report`），使用空间中加载时可见的最新版本。配置中的 `Version` 不固定运行版本。详见[使用 Skill 完成任务](skills.md)。
 
-## 按名称添加内置工具
+## 选择工具
+
+绑定会话读取 Harness 的 `agent_toolset_20260401`。bash、read、edit、write 由 DefaultConfig.Enabled 统一控制（默认 true），grep、glob、web_search、web_fetch 由对应 Configs 项选择。ADK 配有沙箱时，前六种文件或命令工具在沙箱执行，两种网页工具走内置实现。单轮可传逗号分隔的名称或对象数组，例如 `{"tools":[{"tool_name":"grep"},{"tool_name":"read"}]}`。
 
 ```json
 {"tools":"web_search","system_prompt":"查询公开资料后，附上来源。"}
@@ -36,7 +38,7 @@
 {"mcp_servers":[{"protocol":"streamable-http","endpoint":"https://metrics.example.com/mcp"}]}
 ```
 
-把地址替换成 Runtime 能访问的服务。直接连接可选择 `streamable-http` 或 `sse`；服务需要凭据时，配置支持 `api_key`，认证头名称可选 `Authorization` 或 `X-Api-Key`。使用 AgentKit 托管工具集时可传 `mcp_toolset_id`，由运行时解析对应的服务。连接远程 MCP 的协议和应用读取模型输出的 SSE 是两段各自独立的连接。
+把地址替换成 Runtime 能访问的服务。直接连接可选择 `streamable-http` 或 `sse`；服务需要凭据时，配置支持 `api_key`，认证头名称可指定为合法的 HTTP Header 名。使用 AgentKit 托管工具集时可传 `mcp_toolset_id`，由运行时解析对应的服务。连接远程 MCP 的协议和应用读取模型输出的 SSE 是两段各自独立的连接。
 
 本轮显式设置 `mcp_servers` 或 `mcp_toolset_id` 会重建副本中的 Harness MCP 工具集。准备多个服务时，应确认请求包含本轮需要的全部 MCP 配置。可以用「从指标服务查询昨日订单数」验收，核对工具名、参数和返回内容，再检查最终总结是否采用了查询结果。
 

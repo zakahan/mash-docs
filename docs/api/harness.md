@@ -37,7 +37,7 @@ toc_max_heading_level: 2
 | [DeleteHarness](#deleteharness-top) | 控制面 | 删除 Harness |
 | [ListHarnessVersions](#listharnessversions-top) | 控制面 | 列出 Harness 历史版本 |
 
-控制面固定字段使用 PascalCase，分页使用 MaxResults/NextToken。控制面协议适配已实现，已完成本地 HTTP 契约检查和独立数据库 schema 的幂等回归；线上发布和云端端到端行为尚未验证，示例不能作为线上已支持的证据。
+控制面固定字段使用 PascalCase，分页使用 MaxResults/NextToken。
 
 <a id="harness-versions"></a>
 
@@ -84,15 +84,17 @@ Harness 不提供取消归档。DeleteHarness 软删除当前对象并隐藏版�
 
 Harness 更新生成新版本，Session 更新只改变会话允许修改的字段。模型和工具 JSON 的执行能力由运行环境决定；本服务不承诺完整兼容外部 SDK，详见[SDK 接口边界](session.md#session-config-support)。
 
-控制面已接受 MultiAgent 字段并按 Harness 版本固定配置。多 Agent 已完成本地真实模型的一层委派验证，但尚未完成共享环境部署与线上发布验证。线程执行和结果回传见[子 Agent 与线程](../managed/resources.md#子-agent-与线程)；配置保存不代表目标运行环境已支持多 Agent 执行。
+控制面按 Harness 版本保存 MultiAgent 配置。线程执行和结果回传见[子 Agent 与线程](../managed/resources.md#子-agent-与线程)；配置保存不代表目标运行环境已支持多 Agent 执行。
 
 <a id="harness-element-details"></a>
 
 ## Tools、Skills 与 McpServers 元素详情
 
+对 Harness App 0.5.1，绑定时 Runtime 从 GetHarness 响应的 McpServers 元素读取 MCPServiceId，再查询连接配置。单轮配置见[对话接口](chat.md#post-runagentsse)。
+
 本节说明 CreateHarness、UpdateHarness 请求及 Harness 响应中 `Tools`、`Skills`、`McpServers` 的元素结构。请求字段表只描述数组层级的约束，元素结构以本节为准。
 
-本节只描述参数契约。MCP 标准格式见下文，0.5.0 的 MCP 调整为待实现目标。线上发布、真实网关调用和端到端执行均未验证；字段被接受或回显不代表执行器已按该配置执行，权限策略、工具启用状态和技能加载的实际效果由运行环境决定。
+字段被接受或回显不代表执行器已按该配置执行，权限策略、工具启用状态和技能加载的实际效果由运行环境决定。
 
 ### 键名规则
 
@@ -102,30 +104,6 @@ Harness 更新生成新版本，Session 更新只改变会话允许修改的字�
 - `Tools[].InputSchema` 的值整体原样透传：外层 `InputSchema`、`inputSchema`、`input_schema` 归一为 `input_schema`，响应外层键为 `InputSchema`；值中的所有键和值保持原样，包括 `properties`/`Properties` 下的属性名、`required`/`Required`、嵌套 schema、`$defs` 和 `$ref`。例如 `TicketId` 保持 `TicketId`，不会变成 `ticket_id`。服务端不会把 schema 内的 `Type`、`Properties`、`Required` 自动修正为小写，调用方应使用标准 JSON Schema 关键字。InputSchema 内部不做归一冲突检查，`TicketId` 和 `ticket_id` 可以作为两个独立属性同时存在；外层同时提供 `InputSchema` 和 `input_schema` 仍因重名返回 400 `InvalidParameter.Tools.InputSchema`。
 - `Metadata`、`Meta`、`EnvVars`、`Headers`、`AdditionalFields`、`Networking`、`System` 的内部内容沿用原样保留规则，不做归一冲突检查。
 
-### McpServers 标准格式 {#mcp-servers-format}
-
-0.5.0 MCP 目标契约（相对 0.4.0 修改，尚待实现验证）：`*` 表示本次新增或修改，不表示必填，也不属于字段名。CreateHarness 和 UpdateHarness 使用以下标准格式；`run_sse` 也接受该格式，并兼容连接配置格式，见[对话调用接口](chat.md#post-runagentsse)。
-
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-| --- | --- | --- | --- | --- |
-| Name | string | 是 | — | MCP 服务名称，使用稳定、可读的英文标识；同一数组名称不得重复。 |
-| Type | string | 是 | — | URL 服务固定为 `url`。 |
-| Url | string | 是 | — | MCP 服务 HTTP(S) 地址，不允许 userinfo 或 fragment。 |
-| headers \* | object | 否 | — | Header 名称到字符串值的映射；省略或 `{}` 表示无额外 Header。键和值原样保留，不参与结构键归一化；拒绝非法 Header 名称及 CR/LF。Header 值按敏感配置处理。 |
-
-标准格式明确使用 `Name / Type / Url / headers`，其中 `headers` 为小写。本节对 MCP 的规则优先于通用结构键规则；不改写 `X-API-KEY` 等 Header 名称。`McpServers` 为数组，允许多个服务，每个服务分别配置自己的地址和 headers。
-
-```json
-{
-  "McpServers": [
-    {"Name": "orders", "Type": "url", "Url": "https://mcp.example.com/orders", "headers": {"X-API-KEY": "<orders-key>", "X-Tenant-ID": "tenant-a"}},
-    {"Name": "inventory", "Type": "url", "Url": "https://mcp.example.com/inventory", "headers": {"Authorization": "Bearer <inventory-token>"}}
-  ]
-}
-```
-
-以上是 CreateHarness 请求体中的 MCP 字段片段。真实密钥由本地配置或凭据机制提供，不写入仓库；公开回读和日志不得暴露 Header 值。
-
 ### Skills 元素
 
 `Skills` 元素按 `Type` 区分：
@@ -134,12 +112,15 @@ Harness 更新生成新版本，Session 更新只改变会话允许修改的字�
 | --- | --- |
 | `anthropic` | Anthropic 托管技能，`SkillId` 为官方技能标识，例如 `"xlsx"`。 |
 | `custom` | 自定义技能。`SkillId` 可传裸技能 ID，如 `"skill_example"`，也可传 `"技能空间ID/技能ID"`，如 `"ss-example/s-example"`。 |
+| `external_skill_package` | 公开技能包。填写 `Url`；`Source` 省略时运行时使用 `public_url`。 |
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
-| Type | string | 是 | — | `anthropic` 或 `custom`。 |
-| SkillId | string | 是 | — | 技能标识。 |
-| Version | string | 见说明 | 裸技能 ID 省略时使用最新版本 | 要固定的版本。完整自定义技能 ID 在创建或更新 Harness 时必填，不能传空值或 `latest`。 |
+| Type | string | 是 | — | `anthropic`、`custom` 或 `external_skill_package`。 |
+| SkillId | string | `anthropic` 或 `custom` 时必填 | — | 技能标识；公开技能包不填写。 |
+| Version | string | 见说明 | 裸技能 ID 省略时使用最新版本 | 自定义技能版本。完整自定义技能 ID 在创建或更新 Harness 时必填，不能传空值或 `latest`。 |
+| Source | string | 否 | `public_url` | 仅公开技能包使用；当前运行时支持 `public_url`。 |
+| Url | string | `external_skill_package` 时必填 | — | 公开技能包的 URL。 |
 
 - `Skills` 最多 20 项。完整 `custom` 引用要求恰好两段，每段由字母、数字、下划线或连字符组成。REST 和 TOP 共用校验，ID 或版本不合法时返回 400，TOP 错误码分别为 `InvalidParameter.Skills.SkillId` 和 `InvalidParameter.Skills.Version`。合法引用按原值保存并回显。
 Harness App 0.3.1 使用空间中加载时可见的最新版本；以下版本固定规则适用于 Managed Agents Session。
@@ -238,13 +219,13 @@ Harness App 0.3.1 使用空间中加载时可见的最新版本；以下版本�
 - 只校验数组长度上限 128，且按数组元素个数计算，不展开 `Configs`。
 - 除上述键名冲突检查外，不按 `Type` 做判别式校验，也不校验 `Configs`、`DefaultConfig`、`PermissionPolicy`、`InputSchema` 的子字段；元素按键名规则保存并回显。配置语义由执行侧校验，本仓库不承诺这些配置已生效。
 - 创建 Harness 时不校验 `mcp_toolset` 是否引用了 `McpServers` 中的服务，也不要求每个 MCP 服务都被引用。Session 的 `agent_with_overrides` 路径校验 `mcp_toolset.mcp_server_name` 必须命中 `mcp_servers` 中的 `name`（不校验反向的未引用服务）。
-- `McpServers` 元素必须是 JSON 对象，非空 `Name` 不得重复，最多 20 项；认证 Header 使用元素内的 `headers` 对象配置；不得使用顶层 `ApiKey`、`AuthorizationToken` 或 `Authorization` 替代。
-- 本服务不解析 `PermissionPolicy`：工具确认（`user.tool_confirmation`）与自定义工具事件在会话事件白名单内，但策略判断和确认流程由执行器实现，未验证。
+- `McpServers` 元素必须是 JSON 对象，非空 `Name` 不得重复，最多 20 项；元素内禁止 `ApiKey`、`AuthorizationToken`、`Authorization`、`Headers` 字段，凭据通过 Session 的 `credential_keys` 引用。
+- 本服务不解析 `PermissionPolicy`：工具确认（`user.tool_confirmation`）与自定义工具事件在会话事件白名单内，但策略判断和确认流程由执行器实现。
 - Session 覆盖路径会识别 `read` 工具：Harness 含 `Skills` 时，必须能识别到 `read`（顶层元素 `Name` 为 `read`，或 `agent_toolset_20260401` 的 `Configs` 未把 `read` 置为 `Enabled: false`），否则返回 400 `agent.tools`。
 
 ### 网页工具的执行边界 {#web-tool-boundaries}
 
-以下描述 Managed Agents 网页工具的开发中契约；模型与凭据复用行为尚未确认随目标镜像上线，不能仅凭工具配置被接受就认定已生效，也不能将其套用于通用 VeADK 内置网页工具。
+以下字段用于配置 Managed Agents 网页工具。
 
 - **配置与覆盖。** 在 `agent_toolset_20260401` 中启用 `web_search` 或 `web_fetch`。更新 Harness 的 Tools 会整体替换配置，已有 Session 仍使用固定快照；新 Session 可通过 `agent_with_overrides` 提供自己的工具配置。
 - **模型与凭据。** 搜索复用当前 Session Agent 的模型 ID、有效 Base URL 和 Runner 已解析的模型凭据；协议由 Worker 配置决定，快照中的 provider 不覆盖它。该搜索后端要求 `openai` 协议和受支持的方舟 HTTPS 入口，不支持任意 OpenAI 兼容地址。云 Session 的 `x-ark-key-name` 是当前账号下的方舟 API Key Name，不是明文 Key；它也不替代环境访问密钥。
@@ -366,7 +347,7 @@ curl -sS "$HARNESS_BASE_URL/?Action=GetHarness&Version=2025-10-30&HarnessId=agen
 | AgentLoop | string | 是 | `"adk"` | Agent loop 实现。返回该 Harness 版本保存的选择；取值为 adk、codex、dsh、piagent；创建时省略则为 adk。旧格式快照统一返回 adk，不把同名扩展字段解释为执行选择；新建 Harness 的显式选择按版本保存。示例：`"codex"`。 |
 | System | string | 是 | — | 系统提示词。系统提示词字符串或 null；最多 100000 个 Unicode 字符，其他类型拒绝。示例：`"请用中文回答。"`。 |
 | Tools | JSON[] | 是 | — | 工具配置。最多 128 项。工具配置数组；无配置时为 []。元素类型（agent_toolset_20260401、mcp_toolset、custom）、子字段与示例见[Tools 元素](#harness-element-details)。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。示例：`[]`。 |
-| McpServers | JSON[] | 是 | — | MCP 服务配置。最多 20 项；提供的非空 Name 不得重复。MCP 服务定义数组，认证使用元素内的 headers；无配置时为 []。与 mcp_toolset 的引用关系见[Tools 元素](#harness-element-details)。示例：`[]`。 |
+| McpServers | JSON[] | 是 | — | MCP 服务配置。最多 20 项；提供的非空 Name 不得重复。MCP 服务定义数组，不包含认证字段；无配置时为 []。与 mcp_toolset 的引用关系见[Tools 元素](#harness-element-details)。示例：`[]`。 |
 | Skills | JSON[] | 是 | — | 技能配置。最多 20 项。技能配置数组；此处是 Harness 定义，Session 创建时固定其技能版本；无配置时为 []。元素字段（Type、SkillId、Version）、版本固定规则与示例见[Skills 元素](#harness-element-details)。示例：`[]`。 |
 | KnowledgeContexts | JSON[] | 是 | — | OpenViking Context 知识绑定。返回当前 Harness 版本保存的 OpenViking Context 知识绑定；不返回任何密钥或登录态。示例见表后。 |
 | MultiAgent | JSON | 否 | — | 固定子 Harness 委派清单。返回该 Harness 版本固定的委派配置；未启用时为 null。示例：`{"Subagents":[{"Name":"researcher","Agent":{"Type":"agent","Id":"agent_researcher","Version":2}}]}`。 |
@@ -421,7 +402,6 @@ curl -sS "$HARNESS_BASE_URL/?Action=GetHarness&Version=2025-10-30&HarnessId=agen
 
 创建 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=CreateHarness&Version=2025-10-30
@@ -433,7 +413,14 @@ POST /?Action=CreateHarness&Version=2025-10-30
 | --- | --- | --- | --- | --- |
 | Name | string | 是 | — | 名称。去首尾空白后 1～256 个 Unicode 字符；创建和更新均校验，空字符串和 null 不可用于清空。示例：`"文档助手"`。 |
 | Description | string | 否 | — | 描述。字符串或 null；最多 2048 个 Unicode 字符，null 表示无描述。示例：`"文档示例"`。 |
-| Model | JSON | 是 | — | 模型配置。非空模型 ID 字符串或含非空 Id 的对象；不能为 null。Effort 支持 low/medium/high/xhigh/max 字符串或 {Type:等级}，响应统一为对象或 null；Speed 为 standard/fast，默认 standard；InferenceGeo 为 us/global/null，默认 null。CompactThreshold 为可选的上下文压缩 token 阈值，必须为 1–9007199254740991 的整数（如 192000），不能为 null；省略时使用执行器环境配置，环境未设置时默认 192000。新 Session 固定此值，Harness 更新不改变已有 Session；当前仅 veadk-agent-loop ADK Chat 原生压缩路径应用该值。保留 BaseUrl 等执行器扩展字段；实际执行效果由执行器决定。示例：`{"Id":"example-model","BaseUrl":"https://ark.cn-beijing.volces.com/api/v3"}`。 |
+| Model | JSON | 是 | — | 模型配置。可直接填写非空模型 ID 字符串，也可填写包含 `Id` 的对象；不能为 null。对象字段展开如下。 |
+| Model.Id | string | Model 为对象时必填 | — | 非空模型 ID。也可将整个 `Model` 直接写成模型 ID 字符串。 |
+| Model.BaseUrl | string | 否 | — | 模型服务地址，作为执行器扩展字段保存；实际执行效果由执行器决定。 |
+| Model.Effort | string 或 object | 否 | null | 推理强度，可填 `low`、`medium`、`high`、`xhigh`、`max`，也可填含 `Type` 的对象；响应统一为对象或 null。 |
+| Model.Effort.Type | string | Effort 为对象时必填 | — | 推理强度，取 `low`、`medium`、`high`、`xhigh`、`max`。 |
+| Model.Speed | string | 否 | `standard` | 取 `standard` 或 `fast`。 |
+| Model.InferenceGeo | string 或 null | 否 | null | 取 `us`、`global` 或 null。 |
+| Model.CompactThreshold | integer | 否 | 执行器环境配置，未设置时为 `192000` | 上下文压缩 token 阈值，取 1～9007199254740991 的整数；不能为 null。新 Session 固定此值，已有 Session 不随 Harness 更新改变；当前仅 veadk-agent-loop ADK Chat 原生压缩路径应用。 |
 | AgentLoop | string | 否 | `"adk"` | Agent loop 实现。按 Harness（Agent）选择，允许不同 Agent 使用不同实现；取值为 adk、codex、dsh、piagent，区分大小写；省略时使用 adk，显式值必须是非空字符串，不接受 null。piagent 对应 Pi。示例：`"codex"`。 |
 | System | string | 否 | — | 系统提示词。系统提示词字符串或 null；最多 100000 个 Unicode 字符，其他类型拒绝。示例：`"请用中文回答。"`。 |
 | Tools | JSON[] | 否 | `[]` | 工具定义，最多 128 项。省略或传 null 时返回空数组。元素类型（agent_toolset_20260401、mcp_toolset、custom）、子字段与示例见[Tools 元素](#harness-element-details)。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。 |
@@ -444,12 +431,17 @@ POST /?Action=CreateHarness&Version=2025-10-30
 | Tools[].Configs[].Enabled | boolean | 否 | — | 是否启用该工具，覆盖工具集的 `DefaultConfig.Enabled`。 |
 | Tools[].Configs[].PermissionPolicy | object | 否 | — | 单个工具的执行权限策略，可为 null。 |
 | Tools[].Configs[].PermissionPolicy.Type | string | 是 | — | 策略类型，例如 `always_allow` 表示始终允许执行。见 [PermissionPolicy](#harness-permission-policy)。 |
-| McpServers | JSON[] | 否 | `[]` | MCP 服务定义，最多 20 项，每项必须为 JSON 对象。0.5.0 目标格式为 Name、Type、Url 和小写 headers，尚待实现验证；见 [MCP 标准格式](#mcp-servers-format)。省略或 null 时为 []。与 mcp_toolset 的引用关系见 [Tools 元素](#harness-element-details)。 |
-| McpServers.Name | string | 是 | — | MCP 服务名称；建议使用稳定、可读的英文标识，同一数组名称不得重复。 |
-| McpServers.Type | string | 是 | — | URL 服务使用 `url`。 |
-| McpServers.Url | string | 是 | — | MCP 服务访问地址，例如 `https://mcp.example.com/orders`。 |
-| McpServers.headers | object | 否 | — | 小写 `headers`；Header 名称到字符串值的映射，内部名称和值原样保留。例如 `{"X-API-KEY":"<api-key>"}`。文档及仓库样例只使用占位符。 |
-| Skills | JSON[] | 否 | `[]` | Skill 引用。最多 20 项。技能配置数组；自定义技能引用在创建 Session 时解析并固定版本。省略或 null 返回 []。元素字段（Type、SkillId、Version）、版本固定规则与示例见[Skills 元素](#harness-element-details)。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。示例：`[]`。 |
+| McpServers | JSON[] | 否 | `[]` | MCP 定义。最多 20 项；提供的非空 Name 不得重复。数组元素必须是 JSON 对象；禁止 ApiKey、AuthorizationToken、Authorization、Headers 字段。认证凭据通过 Session 的 credential_keys 引用；不得把密钥写入 Harness。省略或 null 返回 []。与 mcp_toolset 的引用关系见[Tools 元素](#harness-element-details)。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。示例：`[]`。 |
+| McpServers[].Type | string | 见说明 | — | MCP 服务类型；使用已注册服务时为 `custom`。 |
+| McpServers[].MCPServiceId | string | `Type=custom` 时填写 | — | MCP 服务 ID。示例格式：`"mcp-service-example"`。 |
+| Skills | JSON[] | 否 | `[]` | Skill 配置数组，最多 20 项。每个元素从下面两种来源中选择一种。省略或 null 返回 []。 |
+| Skills[].来自 AgentKit Skill Space | 配置方式 | — | — | 这一层仅用于区分填写方式，不是请求字段。 |
+| Skills[].来自 AgentKit Skill Space.Type | string | 是 | — | 填 `custom`。 |
+| Skills[].来自 AgentKit Skill Space.SkillId | string | 是 | — | 填 Skill Space 中的技能引用，例如 `ss-demo/s-first`。 |
+| Skills[].来自 AgentKit Skill Space.Version | string | 完整 SkillId 时必填 | — | 填要固定的技能版本；控制面要求完整 SkillId 同时提供版本，不能填 `latest`。 |
+| Skills[].来自公共 Skill | 配置方式 | — | — | 这一层仅用于区分填写方式，不是请求字段。 |
+| Skills[].来自公共 Skill.Type | string | 是 | — | 填 `external_skill_package`。 |
+| Skills[].来自公共 Skill.Url | string | 是 | — | 填公开技能包的 URL，例如 `https://example.com/skills/demo.zip`。 |
 | KnowledgeContexts | JSON[] | 否 | `[]` | OpenViking Context 知识绑定。每个元素必须为对象，且 type=openviking_context、usage=knowledge、context_id 以 ov- 开头；path 省略时为 resources，提供时只能为 resources。P0 最多一个知识 Context。每个 OpenViking 知识绑定必须包含 credential_ref，格式为 {type:identity_api_key_provider,Name,PoolName}，只保存 Identity provider 引用，不保存真实 OpenViking API Key。resource_scope 支持 mode=root 或 mode=alias；alias、description、retrieval_policy、resolved 可选；不得传 target_uri。resolved 与 retrieval_policy 只能保存非敏感配置，不得包含 API Key、AK/SK、Token、Cookie、CSRF 或明文凭据。同一个 context_id 可以同时被知识和记忆绑定使用，但知识绑定只用于 load_knowledgebase，不与记忆结果混用。允许 `null`。示例见表后。 |
 | MultiAgent | JSON | 否 | null | 固定子 Harness 委派清单。省略时保留默认或已有配置，null 表示禁用委派。对象包含 1～8 个 Subagents，每项须有唯一 Name 与 Agent={Type:agent,Id,Version}；主 Harness 仅支持 AgentLoop=adk，子 Harness 不能再启用委派。示例：`{"Subagents":[{"Name":"researcher","Agent":{"Type":"agent","Id":"agent_researcher","Version":2}}]}`。 |
 | Metadata | object | 否 | `{}` | 元数据。最多 16 对自定义键值，不含系统标签；键最多 64 个 Unicode 字符，值须为字符串且最多 512 个 Unicode 字符。省略或 null 时仅返回服务端系统标签。不承载调用凭据。示例：`{"purpose":"documentation"}`。 |
@@ -494,7 +486,7 @@ Content-Type: application/json
     "Id": "example-model",
     "BaseUrl": "https://ark.cn-beijing.volces.com/api/v3"
   },
-  "AgentLoop": "codex",
+  "AgentLoop": "adk",
   "System": "请用中文回答。引用资料时注明出处，不确定时明确说明。",
   "Tools": [
     {
@@ -648,7 +640,7 @@ Content-Type: application/json
       "Speed": "standard",
       "InferenceGeo": null
     },
-    "AgentLoop": "codex",
+    "AgentLoop": "adk",
     "System": "请用中文回答。",
     "Tools": [],
     "McpServers": [],
@@ -680,7 +672,7 @@ Content-Type: application/json
 
 - AgentLoop 是本 Harness（Agent）的选择，不是环境级全局配置；不同 Harness 可分别指定 adk、codex、dsh 或 piagent。adk 使用 ADK 内置循环，codex 使用 Codex SDK，piagent 使用本地 Pi 的 RPC 模式。枚举沿用 VeADK 的 runtime 取值。
 - 省略 AgentLoop 的最小请求使用 adk；Session 使用创建时固定的 Harness 版本及其 AgentLoop，后续 Harness 版本不会改变已有 Session 的选择。
-- Tools、Skills、McpServers 顶层字段名仍须使用 PascalCase。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。响应仍按现有规则转回 PascalCase；字符串值保持原样。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。Metadata、Meta、EnvVars、Headers、AdditionalFields、Networking、System 内部内容沿用原样保留规则。服务端校验数组长度、McpServers 的名称与认证配置，以及 Skills 的显式技能空间引用格式。逐字段说明和限制见[Tools、Skills 与 McpServers 元素详情](#harness-element-details)。
+- Tools、Skills、McpServers 顶层字段名仍须使用 PascalCase。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。响应仍按现有规则转回 PascalCase；字符串值保持原样。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。Metadata、Meta、EnvVars、Headers、AdditionalFields、Networking、System 内部内容沿用原样保留规则。服务端校验数组长度、McpServers 的名称与凭据字段，以及 Skills 的显式技能空间引用格式。逐字段说明和限制见[Tools、Skills 与 McpServers 元素详情](#harness-element-details)。
 - Model.Id 为示例占位值，调用时替换为运行环境可访问的模型；不要把 API Key 写入 Model 或 Metadata。
 - 工具、技能与 MCP 元素须符合运行环境的协议；模型和工具的调用能力在 Session 运行时使用。
 - 创建拒绝未知顶层字段；HarnessId、HarnessVersion 和时间字段由服务生成。
@@ -697,7 +689,6 @@ Content-Type: application/json
 
 查询 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=GetHarness&Version=2025-10-30
@@ -774,7 +765,7 @@ GET /?Action=GetHarness&Version=2025-10-30&HarnessId=agent_example HTTP/1.1
       "Speed": "standard",
       "InferenceGeo": null
     },
-    "AgentLoop": "codex",
+    "AgentLoop": "adk",
     "System": "请用中文回答。",
     "Tools": [],
     "McpServers": [],
@@ -816,7 +807,6 @@ GET /?Action=GetHarness&Version=2025-10-30&HarnessId=agent_example HTTP/1.1
 
 列出 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=ListHarnesses&Version=2025-10-30
@@ -898,7 +888,7 @@ GET /?Action=ListHarnesses&Version=2025-10-30&MaxResults=100&IncludeArchived=tru
           "Speed": "standard",
           "InferenceGeo": null
         },
-        "AgentLoop": "codex",
+        "AgentLoop": "adk",
         "System": "请用中文回答。",
         "Tools": [],
         "McpServers": [],
@@ -942,7 +932,6 @@ GET /?Action=ListHarnesses&Version=2025-10-30&MaxResults=100&IncludeArchived=tru
 
 更新 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=UpdateHarness&Version=2025-10-30
@@ -958,11 +947,7 @@ POST /?Action=UpdateHarness&Version=2025-10-30
 | Model | JSON | 否 | 保留原值 | 模型配置。非空模型 ID 字符串或含非空 Id 的对象；不能为 null。Effort 支持 low/medium/high/xhigh/max 字符串或 {Type:等级}，响应统一为对象或 null；Speed 为 standard/fast，默认 standard；InferenceGeo 为 us/global/null，默认 null。CompactThreshold 为可选的上下文压缩 token 阈值，必须为 1–9007199254740991 的整数（如 192000），不能为 null；省略时使用执行器环境配置，环境未设置时默认 192000。新 Session 固定此值，Harness 更新不改变已有 Session；当前仅 veadk-agent-loop ADK Chat 原生压缩路径应用该值。保留 BaseUrl 等执行器扩展字段；实际执行效果由执行器决定。省略保留模型；提供时整体替换，同 Id 的对象更新省略 Effort 时保留已有 Effort，其他字段不继承。示例：`{"Id":"example-model","BaseUrl":"https://ark.cn-beijing.volces.com/api/v3"}`。 |
 | System | string | 否 | 保留原值 | 系统提示词。系统提示词字符串或 null；最多 100000 个 Unicode 字符，其他类型拒绝。示例：`"请用中文回答。"`。 |
 | Tools | JSON[] | 否 | 保留原值 | 工具定义。最多 128 项。省略保留原值；显式 null 归一化为 []；元素为执行器协议 JSON。省略保留原值；null 或 [] 清空数组。元素类型（agent_toolset_20260401、mcp_toolset、custom）、子字段与示例见[Tools 元素](#harness-element-details)。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。示例：`[]`。 |
-| McpServers | JSON[] | 否 | 保留原值 | MCP 服务定义，最多 20 项，每项必须为 JSON 对象。0.5.0 目标格式为 Name、Type、Url 和小写 headers，尚待实现验证；见 [MCP 标准格式](#mcp-servers-format)。省略保留原值；null 或 [] 清空，传数组整体替换。与 mcp_toolset 的引用关系见 [Tools 元素](#harness-element-details)。 |
-| McpServers.Name | string | 是 | — | MCP 服务名称；建议使用稳定、可读的英文标识，同一数组名称不得重复。 |
-| McpServers.Type | string | 是 | — | URL 服务使用 `url`。 |
-| McpServers.Url | string | 是 | — | MCP 服务访问地址，例如 `https://mcp.example.com/orders`。 |
-| McpServers.headers | object | 否 | — | 小写 `headers`；Header 名称到字符串值的映射，内部名称和值原样保留。例如 `{"X-API-KEY":"<api-key>"}`。文档及仓库样例只使用占位符。 |
+| McpServers | JSON[] | 否 | 保留原值 | MCP 定义。最多 20 项；提供的非空 Name 不得重复。数组元素必须是 JSON 对象；禁止 ApiKey、AuthorizationToken、Authorization、Headers 字段。认证凭据通过 Session 的 credential_keys 引用；不得把密钥写入 Harness。省略保留原值；null 或 [] 清空数组。与 mcp_toolset 的引用关系见[Tools 元素](#harness-element-details)。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。示例：`[]`。 |
 | Skills | JSON[] | 否 | 保留原值 | Skill 引用。最多 20 项。技能配置数组；自定义技能引用在创建 Session 时解析并固定版本。省略保留原值；null 或 [] 清空数组。元素字段（Type、SkillId、Version）、版本固定规则与示例见[Skills 元素](#harness-element-details)。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。示例：`[]`。 |
 | KnowledgeContexts | JSON[] | 否 | 保留原值 | OpenViking Context 知识绑定。每个元素必须为对象，且 type=openviking_context、usage=knowledge、context_id 以 ov- 开头；path 省略时为 resources，提供时只能为 resources。P0 最多一个知识 Context。每个 OpenViking 知识绑定必须包含 credential_ref，格式为 {type:identity_api_key_provider,Name,PoolName}，只保存 Identity provider 引用，不保存真实 OpenViking API Key。resource_scope 支持 mode=root 或 mode=alias；alias、description、retrieval_policy、resolved 可选；不得传 target_uri。resolved 与 retrieval_policy 只能保存非敏感配置，不得包含 API Key、AK/SK、Token、Cookie、CSRF 或明文凭据。同一个 context_id 可以同时被知识和记忆绑定使用，但知识绑定只用于 load_knowledgebase，不与记忆结果混用。更新时传空数组或 null 表示清空知识绑定；省略字段表示保留原值。示例见表后。 |
 | MultiAgent | JSON | 否 | 保留原值 | 固定子 Harness 委派清单。省略时保留默认或已有配置，null 表示禁用委派。对象包含 1～8 个 Subagents，每项须有唯一 Name 与 Agent={Type:agent,Id,Version}；主 Harness 仅支持 AgentLoop=adk，子 Harness 不能再启用委派。示例：`{"Subagents":[{"Name":"researcher","Agent":{"Type":"agent","Id":"agent_researcher","Version":2}}]}`。 |
@@ -1074,7 +1059,7 @@ Content-Type: application/json
       "Speed": "standard",
       "InferenceGeo": null
     },
-    "AgentLoop": "codex",
+    "AgentLoop": "adk",
     "System": "请用中文回答。",
     "Tools": [],
     "McpServers": [],
@@ -1102,7 +1087,7 @@ Content-Type: application/json
 
 固定字段使用 PascalCase，未知顶层字段返回 InvalidParameter.UnknownField。自定义键值仅在 Metadata 内传入；AdditionalFields 只读兼容历史快照。
 
-- Tools、Skills、McpServers 顶层字段名仍须使用 PascalCase。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。响应仍按现有规则转回 PascalCase；字符串值保持原样。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。Metadata、Meta、EnvVars、Headers、AdditionalFields、Networking、System 内部内容沿用原样保留规则。服务端校验数组长度、McpServers 的名称与认证配置，以及 Skills 的显式技能空间引用格式。逐字段说明和限制见[Tools、Skills 与 McpServers 元素详情](#harness-element-details)。
+- Tools、Skills、McpServers 顶层字段名仍须使用 PascalCase。文档示例使用 PascalCase；元素键也接受 lowerCamel、snake_case 及混用，服务端统一转为 snake_case。同一对象内归一后重名的键返回 400 InvalidParameter.<字段路径>，即使值相同也拒绝。响应仍按现有规则转回 PascalCase；字符串值保持原样。Tools[].InputSchema 的外层键归一为 input_schema，响应外层键为 InputSchema；其值整体原样保留，内部属性名、required/Required、嵌套 schema 和引用均不改写，也不做归一冲突校验。Metadata、Meta、EnvVars、Headers、AdditionalFields、Networking、System 内部内容沿用原样保留规则。服务端校验数组长度、McpServers 的名称与凭据字段，以及 Skills 的显式技能空间引用格式。逐字段说明和限制见[Tools、Skills 与 McpServers 元素详情](#harness-element-details)。
 - 省略字段保留原值；除 Metadata 按键合并外，提供的配置整体替换；相同 Model.Id 的对象更新省略 Effort 时保留已有 Effort，其他模型字段不继承。
 - 传 Description/System=null 清空配置；Tools/McpServers/Skills 传 null 或 [] 清空数组。
 - Metadata 中普通键的值为 null 时删除该键，整个 Metadata=null 不会清空已有元数据。
@@ -1124,7 +1109,6 @@ Content-Type: application/json
 
 归档 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=ArchiveHarness&Version=2025-10-30
@@ -1180,7 +1164,7 @@ Content-Type: application/json
       "Speed": "standard",
       "InferenceGeo": null
     },
-    "AgentLoop": "codex",
+    "AgentLoop": "adk",
     "System": "请用中文回答。",
     "Tools": [],
     "McpServers": [],
@@ -1217,7 +1201,6 @@ Content-Type: application/json
 
 删除 Harness。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=DeleteHarness&Version=2025-10-30
@@ -1287,7 +1270,6 @@ Content-Type: application/json
 
 列出 Harness 历史版本。
 
-接口适配已实现并通过本地 HTTP 契约检查；上游联调、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=ListHarnessVersions&Version=2025-10-30
@@ -1359,7 +1341,7 @@ GET /?Action=ListHarnessVersions&Version=2025-10-30&HarnessId=agent_example&MaxR
           "Speed": "standard",
           "InferenceGeo": null
         },
-        "AgentLoop": "codex",
+        "AgentLoop": "adk",
         "System": "请用中文回答。",
         "Tools": [],
         "McpServers": [],

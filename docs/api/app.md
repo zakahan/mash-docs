@@ -3,11 +3,13 @@ toc_max_heading_level: 2
 ---
 # 会话管理接口
 
-本页记录 0.4.0的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
+本页记录 0.5.1 的 Harness App 会话管理接口。请求路径相对于已授权的 Runtime 地址。示例使用应用名 `harness_agent`、用户 `reader-1` 和会话 `report-1`。认证主体和路径中的用户需满足该入口的身份要求。
 
 请求推荐使用本页列出的驼峰字段。`workspaceId`、`harnessId`、`harnessVersion`、`environmentId` 和集合创建入口的 `sessionId` 兼容对应的下划线名称；绑定字段同时提供两种名称时，值或类型不一致返回 422。新建会话不接受 `refreshSnapshot: true`；该字段兼容 `refresh_snapshot`。集合创建入口也兼容 `file_ids`；指定 ID 的创建入口请使用 `fileIds`。会话绑定和文件声明以驼峰名称保存。
 
 创建会话后，通过[对话调用接口](chat.md)发送消息；需要直接操作沙箱中的文件时，使用[文件操作接口](files.md)。
+
+绑定配置含 MCP 服务引用时，Runtime 还会使用部署身份调用 `GetMCPService`。服务 ID 与凭据只进入实例快照；创建请求和响应字段保持原有结构。详见[MCP 服务解析](../app/mcp.md)。
 
 ### 绑定会话与认证
 
@@ -208,7 +210,7 @@ Content-Type: application/json
 
 HTTP 200 返回会话对象，结构见上一节响应示例，`id` 取自路径。重复创建同一 ID 返回 409。该入口直接接收初始状态对象，业务字段写在顶层。要导入历史事件，请使用集合创建入口。
 
-两个创建入口都只保存 `fileIds` 声明，不在创建时下载。首次通过 `/run_sse` 调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，文件须为 `active` 且 `purpose=agent`，并带有 HTTPS 下载地址。下载任务被沙箱接受后即继续执行，不等待文件下载完成。文件路径为 `/workspace/uploads/<fileId>`；过早读取可能不存在，后台失败也不会自动重试。需部署包含 `/usr/local/bin/ve-load-files` 的配套沙箱镜像；文件声明不可通过 `stateDelta` 修改。完整流程见[会话输入文件](../app/sandbox.md#session-input-files)。
+两个创建入口都只保存 `fileIds` 声明，不在创建时下载。首次通过 `/run_sse` 调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，文件须为 `active` 且 `purpose=agent`，并带有 HTTPS 下载地址。下载任务被沙箱接受后即继续执行，不等待文件下载完成。文件路径为 `/workspace/uploads/<fileId>/<filename>`；过早读取可能不存在，后台失败也不会自动重试。需部署包含 `/usr/local/bin/ve-load-files` 的配套沙箱镜像；文件声明不可通过 `stateDelta` 修改。完整流程见[会话输入文件](../app/sandbox.md#session-input-files)。
 
 例如，在创建请求的顶层加入 `"fileIds":["file-report","file-data"]`，响应的 `state.fileIds` 返回相同列表。非空列表用于未绑定会话或非 ADK 沙箱配置时返回 422；该声明不受[上传接口](files.md#post-uploadsessionfile)的 8 MiB 限制。
 

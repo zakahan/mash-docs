@@ -31,7 +31,7 @@ toc_max_heading_level: 2
 | [UpdateEnvironment](#updateenvironment-top) | 控制面 | 更新环境 |
 | [DeleteEnvironment](#deleteenvironment-top) | 控制面 | 删除环境 |
 
-控制面固定字段使用 PascalCase，分页使用 MaxResults/NextToken。本页描述开发中的接口契约，目标控制面协议适配尚未完成；数据库集成、线上发布和端到端执行尚未验证，示例不能作为线上已支持的证据。
+控制面固定字段使用 PascalCase，分页使用 MaxResults/NextToken。
 
 <a id="environment-errors"></a>
 
@@ -194,7 +194,6 @@ CreateEnvironment、GetEnvironment、UpdateEnvironment 的 Result 与 ListEnviro
 
 创建环境。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=CreateEnvironment&Version=2025-10-30
@@ -412,7 +411,6 @@ Content-Type: application/json
 
 创建 EnvironmentWithImageBuild。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=CreateEnvironmentWithImageBuild&Version=2025-10-30
@@ -555,7 +553,6 @@ Content-Type: application/json
 
 查询 EnvironmentBuildStatus。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=GetEnvironmentBuildStatus&Version=2025-10-30
@@ -651,7 +648,6 @@ GET /?Action=GetEnvironmentBuildStatus&Version=2025-10-30&EnvironmentId=env_exam
 
 创建 DevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=CreateDevboxInstance&Version=2025-10-30
@@ -724,7 +720,6 @@ Content-Type: application/json
 
 ExecuteDevboxInstanceCommand。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=ExecuteDevboxInstanceCommand&Version=2025-10-30
@@ -798,7 +793,6 @@ Content-Type: application/json
 
 查询 DevboxInstanceCommandResult。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=GetDevboxInstanceCommandResult&Version=2025-10-30
@@ -892,7 +886,6 @@ GET /?Action=GetDevboxInstanceCommandResult&Version=2025-10-30&CommandExecutionI
 
 查询 DevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=GetDevboxInstance&Version=2025-10-30
@@ -1019,7 +1012,6 @@ GET /?Action=GetDevboxInstance&Version=2025-10-30&DevboxInstanceId=di_example HT
 
 列出 DevboxInstances。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=ListDevboxInstances&Version=2025-10-30
@@ -1132,7 +1124,6 @@ GET /?Action=ListDevboxInstances&Version=2025-10-30&MaxResults=20 HTTP/1.1
 
 StartDevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=StartDevboxInstance&Version=2025-10-30
@@ -1200,7 +1191,6 @@ Content-Type: application/json
 
 StopDevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=StopDevboxInstance&Version=2025-10-30
@@ -1268,7 +1258,6 @@ Content-Type: application/json
 
 RebootDevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=RebootDevboxInstance&Version=2025-10-30
@@ -1336,7 +1325,6 @@ Content-Type: application/json
 
 删除 DevboxInstance。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=DeleteDevboxInstance&Version=2025-10-30
@@ -1406,7 +1394,6 @@ Content-Type: application/json
 
 查询环境。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=GetEnvironment&Version=2025-10-30
@@ -1494,7 +1481,6 @@ GET /?Action=GetEnvironment&Version=2025-10-30&EnvironmentId=env_example HTTP/1.
 
 列出环境。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 GET /?Action=ListEnvironments&Version=2025-10-30
@@ -1606,7 +1592,6 @@ GET /?Action=ListEnvironments&Version=2025-10-30&MaxResults=100&IncludeArchived=
 
 更新环境。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=UpdateEnvironment&Version=2025-10-30
@@ -1791,7 +1776,6 @@ Content-Type: application/json
 
 删除环境。
 
-目标控制面协议适配尚未完成；数据库集成、线上发布与端到端执行尚未验证。
 
 ```http
 POST /?Action=DeleteEnvironment&Version=2025-10-30

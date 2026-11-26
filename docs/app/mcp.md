@@ -13,54 +13,21 @@ MCP 将远程服务的能力提供为模型可调用的工具。应用仍然只�
 
 ## 在 Harness 中登记服务
 
-准备一个支持 Streamable HTTP 的 MCP 地址。示例采用提供订单查询工具的服务，你可以替换为自己的 MCP 地址、凭证和任务。
-
-在签名客户端调用 `UpdateHarness`。填入当前 Harness 修订号，提交完整的服务列表。
+绑定会话读取的 GetHarness 响应示例：
 
 ```json
-{
-  "WorkspaceId": "<WORKSPACE_ID>",
-  "HarnessId": "<HARNESS_ID>",
-  "HarnessVersion": 1,
-  "McpServers": [
-    {
-      "mcpServers": {
-        "orders": {
-          "type": "http",
-          "url": "https://orders.example.com/mcp",
-          "headers": {"Authorization": "Bearer <MCP_API_KEY>"}
-        }
-      }
-    }
-  ]
-}
+{"McpServers":[{"MCPServiceId":"m-orders","Type":"custom"}]}
 ```
 
-更新成功后，响应中的 `HarnessVersion` 应增加，并回显新的 MCP 配置。以下响应已隐藏凭证。
+创建、刷新或恢复快照时，Runtime 使用绑定 Workspace 和部署身份调用 `GetMCPService`，按 ID 去重。服务须能提供可用网关，优先选择 Public Endpoint，拼接服务 Path（默认 /mcp）并使用 Streamable HTTP。支持无认证或 Header ApiKey；显式 Parameter 时原样发送密钥，未指定时使用 Authorization Bearer。解析失败会中止本次操作。
+
+服务配置及凭据缓存在当前实例的会话快照中。已有绑定会话可以在一次请求中选择其他服务：
 
 ```json
-{
-  "Result": {
-    "HarnessId": "<HARNESS_ID>",
-    "HarnessVersion": 2,
-    "McpServers": [
-      {
-        "McpServers": {
-          "orders": {
-            "Type": "http",
-            "Url": "https://orders.example.com/mcp",
-            "Headers": {"Authorization": "<REDACTED>"}
-          }
-        }
-      }
-    ]
-  }
-}
+{"harness":{"mcp_service_ids":["m-orders"]}}
 ```
 
-**验收配置：** 新版本号大于更新前的版本号，服务名称、协议和 URL 与请求一致。此时只证明控制面保存成功；连接和工具发现发生在运行请求中。无需认证的服务可以省略 `headers`。新建 Harness 时，直接将 `McpServers` 放到 `CreateHarness` 正文即可。控制面会规范化结构字段的大小写，GetHarness 响应里的键可能为 `McpServers`、`Type`、`Url` 和 `Headers`。[控制面 MCP 字段](../api/harness.md#harness-element-details)
-
-快照解析将 `http` 转成 `streamable-http`。省略类型时按 HTTP 处理，也支持 `sse`。当前支持 Bearer Authorization 和 X-Api-Key 认证头，其他头会使快照解析返回 422。
+命中缓存直接复用，仅查询缺失 ID；下一轮省略该字段恢复默认列表。传空数组仅本轮禁用。刷新重建缓存，实例恢复按固定 Harness 版本重新查询当前服务配置。服务配置本身没有随 Harness 锁定版本。
 
 ## 刷新并验证工具调用
 
@@ -106,7 +73,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 }
 ```
 
-此处的 `api_key` 只填凭证值，Runtime 会为 Authorization 拼接 `Bearer `。这与控制面配置中填写完整 `Headers.Authorization` 的方式不同。数组整体替换，下一轮省略就回到快照配置，传 `[]` 则清空本轮直接服务列表。[运行接口](../api/chat.md#post-runagentsse)
+此处的 `api_key` 只填凭证值，Runtime 会为 Authorization 拼接 `Bearer `。数组整体替换，下一轮省略就回到快照配置，传 `[]` 则清空本轮直接服务列表。[运行接口](../api/chat.md#post-runagentsse)
 
 ## 执行与连接生命周期
 
@@ -124,7 +91,9 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 
 | 现象 | 检查项 |
 | --- | --- |
-| 创建或刷新返回 422 | 服务结构、协议、URL 和认证头是否受支持 |
+| 422 | 检查服务 ID、会话绑定与单轮 MCP 字段互斥条件。 |
+| 403、404、429 | GetMCPService 查询被拒绝、资源不存在或被限流。 |
+| 502 | 检查服务状态、Endpoint、认证方式及控制面响应。 |
 | 进入 SSE 后连接失败 | Runtime 是否能访问目标地址，协议是否匹配 |
 | 目标服务返回 401 或 403 | 检查服务凭证及 Bearer 是否重复 |
 | GetMCPToolset 失败 | 检查部署身份的 ToolSet 读取权限 |

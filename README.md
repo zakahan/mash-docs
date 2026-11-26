@@ -28,7 +28,7 @@ GitHub `main` 更新后，Actions 自动发布到 <https://zakahan.github.io/mas
 
 ## 版本与公开内容
 
-`docs/` 对应 latest，目前跟踪 0.5.0；开发中的目标契约在对应页面单独标注。`versioned_docs/version-0.5.0/`、`versioned_docs/version-0.4.0/`、`versioned_docs/version-0.3.1/` 和 `versioned_docs/version-0.2.0/` 保存对应发布版本的快照。按变更实际适用的版本维护文档。发布下一版本时先更新 latest，执行 `npm run snapshot -- <版本号>`，再检查新快照、侧边栏与版本切换。
+`docs/` 对应 latest，目前跟踪 0.5.1；开发中的目标契约在对应页面单独标注。`versioned_docs/version-0.5.1/`、`versioned_docs/version-0.4.0/`、`versioned_docs/version-0.3.1/` 和 `versioned_docs/version-0.2.0/` 保存对应发布版本的快照。按变更实际适用的版本维护文档。发布下一版本时先更新 latest，执行 `npm run snapshot -- <版本号>`，再检查新快照、侧边栏与版本切换。
 
 控制面接口使用独立的 API 版本；开发中能力在对应页面明确标注。Harness App 请求与响应按镜像版本维护。
 

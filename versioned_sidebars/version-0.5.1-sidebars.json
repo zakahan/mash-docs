@@ -74,32 +74,32 @@
                 {
                   "type": "link",
                   "label": "查询会话列表",
-                  "href": "/0.4.0/api/app#get-listsessions"
+                  "href": "/api/app#get-listsessions"
                 },
                 {
                   "type": "link",
                   "label": "创建会话",
-                  "href": "/0.4.0/api/app#post-createsession"
+                  "href": "/api/app#post-createsession"
                 },
                 {
                   "type": "link",
                   "label": "使用指定 ID 创建会话",
-                  "href": "/0.4.0/api/app#post-createsessionwithid"
+                  "href": "/api/app#post-createsessionwithid"
                 },
                 {
                   "type": "link",
                   "label": "查询会话详情",
-                  "href": "/0.4.0/api/app#get-getsession"
+                  "href": "/api/app#get-getsession"
                 },
                 {
                   "type": "link",
                   "label": "更新会话状态",
-                  "href": "/0.4.0/api/app#patch-updatesession"
+                  "href": "/api/app#patch-updatesession"
                 },
                 {
                   "type": "link",
                   "label": "删除会话",
-                  "href": "/0.4.0/api/app#delete-deletesession"
+                  "href": "/api/app#delete-deletesession"
                 }
               ]
             },
@@ -114,32 +114,32 @@
                 {
                   "type": "link",
                   "label": "运行对话",
-                  "href": "/0.4.0/api/chat#post-runagent"
+                  "href": "/api/chat#post-runagent"
                 },
                 {
                   "type": "link",
                   "label": "流式运行对话 [推荐]",
-                  "href": "/0.4.0/api/chat#post-runagentsse"
+                  "href": "/api/chat#post-runagentsse"
                 },
                 {
                   "type": "link",
                   "label": "简化流式调用",
-                  "href": "/0.4.0/api/chat#post-invoke"
+                  "href": "/api/chat#post-invoke"
                 },
                 {
                   "type": "link",
                   "label": "发现 A2A 服务",
-                  "href": "/0.4.0/api/chat#get-a2acard"
+                  "href": "/api/chat#get-a2acard"
                 },
                 {
                   "type": "link",
                   "label": "A2A 消息调用",
-                  "href": "/0.4.0/api/chat#post-a2asend"
+                  "href": "/api/chat#post-a2asend"
                 },
                 {
                   "type": "link",
                   "label": "A2A 流式消息",
-                  "href": "/0.4.0/api/chat#post-a2astream"
+                  "href": "/api/chat#post-a2astream"
                 }
               ]
             },
@@ -154,17 +154,17 @@
                 {
                   "type": "link",
                   "label": "上传文件",
-                  "href": "/0.4.0/api/files#post-uploadsessionfile"
+                  "href": "/api/files#post-uploadsessionfile"
                 },
                 {
                   "type": "link",
                   "label": "列出文件",
-                  "href": "/0.4.0/api/files#get-listsessionfiles"
+                  "href": "/api/files#get-listsessionfiles"
                 },
                 {
                   "type": "link",
                   "label": "下载文件",
-                  "href": "/0.4.0/api/files#get-downloadsessionfile"
+                  "href": "/api/files#get-downloadsessionfile"
                 }
               ]
             }
@@ -197,52 +197,52 @@
             {
               "type": "link",
               "label": "创建托管会话",
-              "href": "/0.4.0/api/session#createagentsessionrest"
+              "href": "/api/session#createagentsessionrest"
             },
             {
               "type": "link",
               "label": "查询托管会话详情",
-              "href": "/0.4.0/api/session#getagentsessionrest"
+              "href": "/api/session#getagentsessionrest"
             },
             {
               "type": "link",
               "label": "查询托管会话列表",
-              "href": "/0.4.0/api/session#listagentsessionsrest"
+              "href": "/api/session#listagentsessionsrest"
             },
             {
               "type": "link",
               "label": "更新托管会话",
-              "href": "/0.4.0/api/session#updateagentsessionrest"
+              "href": "/api/session#updateagentsessionrest"
             },
             {
               "type": "link",
               "label": "归档托管会话",
-              "href": "/0.4.0/api/session#archiveagentsessionrest"
+              "href": "/api/session#archiveagentsessionrest"
             },
             {
               "type": "link",
               "label": "删除托管会话",
-              "href": "/0.4.0/api/session#deleteagentsessionrest"
+              "href": "/api/session#deleteagentsessionrest"
             },
             {
               "type": "link",
               "label": "发送会话事件",
-              "href": "/0.4.0/api/session#sendsessioneventsrest"
+              "href": "/api/session#sendsessioneventsrest"
             },
             {
               "type": "link",
               "label": "查询事件历史",
-              "href": "/0.4.0/api/session#listsessioneventsrest"
+              "href": "/api/session#listsessioneventsrest"
             },
             {
               "type": "link",
               "label": "订阅事件流",
-              "href": "/0.4.0/api/session#sessioneventsstreamrest"
+              "href": "/api/session#sessioneventsstreamrest"
             },
             {
               "type": "link",
               "label": "查询会话资源",
-              "href": "/0.4.0/api/session#listsessionresourcesrest"
+              "href": "/api/session#listsessionresourcesrest"
             }
           ]
         }

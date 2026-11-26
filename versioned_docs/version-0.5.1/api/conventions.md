@@ -3,7 +3,7 @@ toc_max_heading_level: 2
 ---
 # API 调用约定
 
-本页适用于 [Harness 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`；开发中接口的状态见对应页面。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [会话管理接口](app.md)、[对话调用接口](chat.md)和[文件操作接口](files.md)。
+本页适用于 [Harness 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [会话管理接口](app.md)、[对话调用接口](chat.md)和[文件操作接口](files.md)。
 
 ## 认证与请求地址
 
@@ -37,7 +37,7 @@ Session 数据面使用分配的 Endpoint 和环境访问密钥；HTTP 方法、
 | ResponseMetadata | object | 是 | 公共响应元信息。 |
 | ResponseMetadata.RequestId | string | 是 | 请求跟踪 ID。 |
 | ResponseMetadata.Action | string | 是 | 本次接口名称。 |
-| ResponseMetadata.Version | string | 是 | 请求的 API 版本；回显不代表版本已发布。 |
+| ResponseMetadata.Version | string | 是 | 请求的 API 版本。 |
 | ResponseMetadata.Service | string | 是 | 服务标识，不作为签名服务名的配置依据。 |
 | ResponseMetadata.Region | string | 是 | 入口提供的地域；未提供时为空字符串。 |
 | ResponseMetadata.Error | object | 失败时返回 | 错误信息，成功时省略。 |

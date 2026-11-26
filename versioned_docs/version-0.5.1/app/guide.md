@@ -54,6 +54,6 @@ Harness App 是运行在 AgentKit Runtime 中的 Agent HTTP 服务。业务应�
 | [API 参考](../api/index.md) | 请求参数、响应字段和错误处理的完整契约 |
 | [扩展 Harness App](develop.md) | 从服务入口追踪配置解析、Agent 组装与执行代码 |
 
-本文描述 **0.4.0**。会话绑定适用于服务认证部署和 Active Cloud Environment。多实例或重启后恢复历史需要持久化会话后端；实例会按会话固定版本自动重建内存快照；仍有效的物理沙箱可按会话标识重新附着。[版本说明](../versions.md)
+本文描述 **0.5.1**。会话绑定适用于服务认证部署和 Active Cloud Environment。多实例或重启后恢复历史需要持久化会话后端；实例会按会话固定版本自动重建内存快照；仍有效的物理沙箱可按会话标识重新附着。[版本说明](../versions.md)
 
 单实例下直接对话与沙箱工具的实测延迟和吞吐见[性能与指标](load-test.md)。

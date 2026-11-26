@@ -14,4 +14,4 @@ toc_max_heading_level: 2
 | [文件操作接口](files.md) | 上传、列出和下载会话沙箱文件 | Runtime HTTP multipart、JSON 与二进制流。 |
 | [Managed Agents API](session.md) | 创建 Session、写入输入、订阅或回看事件 | Session Endpoint REST / SSE；直接返回资源对象、列表或事件。 |
 
-本页对应 0.4.0。控制面 Action 使用单独的 API 版本 `2025-10-30`，目标环境需提供相应接口。
+本页对应 0.5.1。控制面 Action 使用单独的 API 版本 `2025-10-30`，目标环境需提供相应接口。

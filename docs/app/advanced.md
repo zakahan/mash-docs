@@ -180,7 +180,7 @@ DATABASE_POSTGRESQL_SCHEMA=harness_app
 |---|---|---|
 | `TOOLS` | 空 | 内置工具名称，多个用逗号分隔。组装时逐个解析，无法加载的工具记入日志并跳过。 |
 | `MCP_TOOLSET_ID` | 空 | 指向 AgentKit 工具集；由 Runtime 身份查询网关信息。 |
-| `MCP_SERVERS` | 空列表 | JSON 数组，每项填写 `endpoint` 与可选 `protocol`（默认 `streamable-http`，另支持 `sse`）。有认证的服务还可配置 `api_key` 以及 `api_key_header`（`Authorization` 或 `X-Api-Key`）。 |
+| `MCP_SERVERS` | 空列表 | JSON 数组，每项填写 `endpoint` 与可选 `protocol`（默认 `streamable-http`，另支持 `sse`）。有认证的服务还可配置 `api_key` 及自定义 `api_key_header`；使用 Authorization 时默认添加 Bearer，可用 `api_key_bearer: false` 发送原值。 |
 | `SKILLS` | 空 | 逗号分隔的技能引用。在普通模式可使用 Skill Hub slug、空间 ID、空间内技能引用。AIO 模式接受 `ss-...` 或 `ss-...:s-...`。 |
 | `SKILL_HUB_DOWNLOAD_URL` | `https://skills.volces.com/v1/skills/download` | Skill Hub 下载地址前缀，运行时在末尾追加技能名。 |
 | `REGISTRY_TYPE` | 空 | 设为 `agentkit_a2a` 启用注册中心搜索与任务工具。 |

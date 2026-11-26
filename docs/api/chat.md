@@ -3,9 +3,7 @@ toc_max_heading_level: 2
 ---
 # 对话调用接口
 
-本页记录 0.5.0的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段使用本页列出的下划线名称；`mcp_servers` 元素也接受 Harness 标准格式的 `Name / Type / Url / headers`。
-
-本页 MCP 双格式兼容为 0.5.0 目标契约，尚待运行时实现和验证。`*` 表示相对 0.4.0 的新增或修改，不表示必填，也不属于字段名。
+本页记录 0.5.1 的 Harness App 对话执行、SSE 与 A2A 接口。请求路径相对于已授权的 Runtime 地址。使用 `/run`、`/run_sse` 或 `/invoke` 时，先通过[会话管理接口](app.md#post-createsession)创建会话并保存返回的 `id`。A2A 消息调用按本页对应接口构造请求。认证方式与请求头取决于 Runtime 部署，具体字段见各接口。沙箱文件的上传、列出与下载见[文件操作接口](files.md)。请求字段推荐使用本页列出的驼峰名称；`refreshSnapshot` 兼容下划线名称 `refresh_snapshot`，绑定字段兼容规则见[会话管理接口](app.md)。`harness` 内的配置字段仍使用本页列出的下划线名称。
 
 ## POST /run {#post-runagent}
 
@@ -84,31 +82,7 @@ Content-Type: application/json
 
 日常对话调用推荐使用此接口，以便及时接收增量输出；`/run` 保留用于需要完整事件数组的调用。在已有会话中运行 Harness Agent，以 SSE 返回事件。服务认证部署的绑定会话默认使用固定版本对应的实例快照；缓存缺失或版本不一致时按 Session 中的版本自动重建。普通消息不会仅因经过一段时间而读取最新 Harness。
 
-<div class="api-contract"><section><h4>请求体</h4><dl><div class="api-property"><dt><code>harnessVersion</code> <small>integer · 可选</small></dt><dd>续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 <code>refreshSnapshot: true</code> 互斥。</dd></div><div class="api-property"><dt><code>refreshSnapshot</code> <small>boolean · 可选 · 默认值 false</small></dt><dd>传 true 时，用原绑定获取最新 Harness 和当前 Environment，成功后持久化实际版本、替换快照并执行本轮。字符串和 null 返回 422。</dd></div></dl><details open><summary><code>harness</code> <small>object · 可选</small><span class="api-field-description">设置本轮 Harness Agent 使用的模型、指令和工具。</span></summary><dl><div class="api-property"><dt><code>model_name</code> <small>string · 可选</small></dt><dd>模型名称；绑定会话省略时沿用快照，未绑定时沿用部署配置。</dd></div><div class="api-property"><dt><code>system_prompt</code> <small>string · 可选</small></dt><dd>系统提示词。</dd></div><div class="api-property"><dt><code>tools</code> <small>string · 可选</small></dt><dd>逗号分隔的内置工具名称。</dd></div><div class="api-property"><dt><code>skills</code> <small>string · 可选</small></dt><dd>逗号分隔的 Skill Hub slug、Space ID 或 Space:Skill 引用。</dd></div><div class="api-property"><dt><code>runtime</code> <small><code>adk</code> or <code>codex</code> · 可选</small></dt><dd>默认 <code>adk</code>。</dd></div><div class="api-property"><dt><code>max_llm_calls</code> <small>int or null · 可选</small></dt><dd>最大模型调用次数，最小值为 <code>1</code>。</dd></div><div class="api-property"><dt><code>model_provider</code> <small>string · 可选</small></dt><dd>模型提供方；绑定会话省略时沿用快照，未绑定时沿用部署配置。</dd></div><div class="api-property"><dt><code>model_api_base</code> <small>string · 可选</small></dt><dd>模型 API 地址；不得指向链路本地或云元数据地址。</dd></div><div class="api-property"><dt><code>model_api_key</code> <small>string · 可选</small></dt><dd>模型 API 密钥。仅用于兼容历史调用方，新调用方应改用 <code>X-Model-API-Key</code>；两者同时提供时以 Header 为准。</dd></div><div class="api-property"><dt><code>mcp_toolset_id</code> <small>string · 可选</small></dt><dd>MCP ToolSet ID，只能选一个，而且是本账号下的。</dd></div></dl><details><summary><code>mcp_servers</code> * <small>McpServer[] · 可选</small></summary><p>支持多个 MCP 服务，每个数组元素选择下面一种格式。新请求推荐使用新版格式；旧版格式用于兼容已有调用。省略时继承配置；显式提供时整体替换 MCP 选择，[] 且未提供非空 mcp_toolset_id 时禁用 MCP。</p><details open><summary>新版格式（推荐）<span class="api-field-description">与 CreateHarness 一致：Name / Type / Url / headers。</span></summary><dl><div class="api-property"><dt><code>Name</code> <small>string · 标准格式必填</small></dt><dd>MCP 服务名称，建议使用稳定、可读的英文标识。</dd></div><div class="api-property"><dt><code>Type</code> <small>url · 标准格式必填</small></dt><dd>固定为 url，对应 streamable-http 连接。</dd></div><div class="api-property"><dt><code>Url</code> <small>string · 标准格式必填</small></dt><dd>HTTP(S) 地址，不允许 userinfo 或 fragment。</dd></div><div class="api-property"><dt><code>headers</code> <small>object · 可选</small></dt><dd>标准格式；Header 名称到字符串值的映射，省略或 {} 表示无额外 Header。支持多个 Header，名称和值原样传递；禁止非法名称及 CR/LF。值按敏感配置脱敏。</dd></div></dl><p>新版格式示例（请求体片段）：</p><pre><code>{
-  &quot;harness&quot;: {
-    &quot;mcp_servers&quot;: [
-      {
-        &quot;Name&quot;: &quot;orders&quot;,
-        &quot;Type&quot;: &quot;url&quot;,
-        &quot;Url&quot;: &quot;https://mcp.example.com/orders&quot;,
-        &quot;headers&quot;: {
-          &quot;X-API-KEY&quot;: &quot;&lt;api-key&gt;&quot;
-        }
-      }
-    ]
-  }
-}</code></pre></details><details><summary>旧版格式（兼容）<span class="api-field-description">使用 protocol / endpoint / api_key / api_key_header。</span></summary><dl><div class="api-property"><dt><code>protocol</code> <small>streamable-http or sse · 可选</small></dt><dd>连接配置格式；默认 streamable-http。</dd></div><div class="api-property"><dt><code>endpoint</code> <small>string · 连接配置格式必填</small></dt><dd>HTTP(S) 地址，不允许 userinfo 或 fragment。</dd></div><div class="api-property"><dt><code>api_key</code> <small>string or null · 可选</small></dt><dd>连接配置格式的认证密钥；默认使用 Authorization: Bearer，api_key_header 为 X-Api-Key 时发送原始密钥。</dd></div><div class="api-property"><dt><code>api_key_header</code> <small>Authorization or X-Api-Key · 可选</small></dt><dd>连接配置格式；默认 Authorization。</dd></div></dl><p>旧版格式示例（请求体片段）：</p><pre><code>{
-  &quot;harness&quot;: {
-    &quot;mcp_servers&quot;: [
-      {
-        &quot;protocol&quot;: &quot;streamable-http&quot;,
-        &quot;endpoint&quot;: &quot;https://mcp.example.com/orders&quot;,
-        &quot;api_key&quot;: &quot;&lt;api-key&gt;&quot;,
-        &quot;api_key_header&quot;: &quot;X-Api-Key&quot;
-      }
-    ]
-  }
-}</code></pre></details><p>每个元素只能使用一组字段，不要把新版 Url 与旧版 endpoint、api_key 等字段写在同一个对象中，混用返回 HTTP 422。同一数组中的不同服务可分别使用新版或旧版格式。</p></details><details><summary><code>knowledgebase</code> <small>object or null</small></summary><dl><div class="api-property"><dt><code>index</code> <small>string or null · 可选</small></dt><dd>知识库索引；长度不超过 <code>128</code>，仅允许字母、数字、下划线、点和连字符。</dd></div><div class="api-property"><dt><code>type</code> <small>string or null · 可选</small></dt><dd><code>local</code>、<code>opensearch</code>、<code>redis</code>、<code>milvus</code>、<code>tos_vector</code>、<code>viking</code>、<code>context_search</code> 或 <code>openviking</code>。</dd></div></dl></details><details><summary><code>sandbox</code> <small>object or null</small></summary><dl><div class="api-property"><dt><code>tool_id</code> <small>string or null · 可选</small></dt><dd>Sandbox Tool ID；部署设置 allowlist 时必须在 allowlist 内。绑定会话不能改为快照之外的 Tool ID，否则返回 422；调整 TTL 时省略此字段。</dd></div><div class="api-property"><dt><code>ttl</code> <small>int or null · 可选</small></dt><dd>Session TTL，范围 <code>60</code>–<code>86400</code> 秒。</dd></div></dl></details><dl><div class="api-property"><dt><code>registry_space_id</code> <small>string · 可选</small></dt><dd>A2A Registry Space 标识。</dd></div><div class="api-property"><dt><code>registry_endpoint</code> <small>string · 可选</small></dt><dd>A2A Registry 地址。</dd></div><div class="api-property"><dt><code>registry_region</code> <small>string · 可选</small></dt><dd>A2A Registry 区域。</dd></div><div class="api-property"><dt><code>registry_top_k</code> <small>int · 可选</small></dt><dd>Registry 返回数量，最小值为 <code>1</code>，默认 <code>3</code>。</dd></div></dl><p><code>resources</code> · array · 可选。结构见同页的顶层资源字段。</p></details><dl><div class="api-property"><dt><code>userId</code> <small>string · 必填</small></dt><dd>用户标识；兼容输入 <code>user_id</code>；身份模式下服务端使用认证主体覆盖该值。</dd></div><div class="api-property"><dt><code>sessionId</code> <small>string · 必填</small></dt><dd>已创建的会话标识；兼容输入 <code>session_id</code>。</dd></div><details open><summary><code>newMessage</code> <small>Content or null · 可选</small><span class="api-field-description">本轮输入消息；兼容输入 <code>new_message</code>。普通文本使用 <code>role: user</code> 和 <code>parts[].text</code>。嵌套字段使用下列 camelCase 名称，也兼容 SDK 的 snake_case 名称（如 inline_data、mime_type）。字段可被请求模型接受不代表所有模型提供方都支持相应能力。</span></summary><div class="api-property"><dt><code>role</code> <small>string or null · 可选</small></dt><dd>消息角色：<code>user</code> 或 <code>model</code>；本轮用户输入应为 <code>user</code>。</dd></div><details><summary><code>parts[]</code> <small>Part[] or null · 可选</small><span class="api-field-description">按顺序组成消息的分片。每个分片选择一种内容类型，文本和文件组合时分别放入数组元素；下列类型允许省略/null，具体内容约束由模型和工具协议决定。</span></summary><div class="api-property"><dt><code>text</code> <small>string or null · 可选</small></dt><dd>文本内容。普通对话通常只需填写此字段。</dd></div><details><summary><code>inlineData</code> <small>Blob or null · 可选</small><span class="api-field-description">内联图片、音频或其他二进制文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>媒体 MIME 类型，例如 <code>image/png</code>；提供内联文件时应填写。</dd></div><div class="api-property"><dt><code>data</code> <small>string or null · 可选</small></dt><dd>Base64 编码的文件字节；提供内联文件时应填写，不带 data URL 前缀。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称，是否被模型使用取决于提供方。</dd></div></details><details><summary><code>fileData</code> <small>FileData or null · 可选</small><span class="api-field-description">通过 URI 引用文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>文件 MIME 类型，例如 <code>application/pdf</code>。</dd></div><div class="api-property"><dt><code>fileUri</code> <small>string or null · 可选</small></dt><dd>文件 URI；提供文件时应填写，地址格式和读取能力取决于模型提供方。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称。</dd></div></details><details><summary><code>functionCall</code> <small>FunctionCall or null · 可选</small><span class="api-field-description">模型产生的函数调用。普通用户输入不需要构造此对象。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>函数调用标识；返回结果时用同一 ID 关联。</dd></div><div class="api-property"><dt><code>name</code> <small>string or null · 可选</small></dt><dd>函数名称。</dd></div><div class="api-property"><dt><code>args</code> <small>object or null · 可选</small></dt><dd>函数参数 JSON 对象，键由对应工具定义。</dd></div><details><summary><code>partialArgs[]</code> <small>PartialArg[] or null · 可选</small><span class="api-field-description">增量函数参数，是否支持取决于提供方。</span></summary><div class="api-property"><dt><code>jsonPath</code> <small>string or null · 可选</small></dt><dd>增量参数的 JSON Path，例如 <code>$.query</code>。</dd></div><div class="api-property"><dt><code>stringValue</code> <small>string or null · 可选</small></dt><dd>字符串值。</dd></div><div class="api-property"><dt><code>numberValue</code> <small>number or null · 可选</small></dt><dd>数值。</dd></div><div class="api-property"><dt><code>boolValue</code> <small>boolean or null · 可选</small></dt><dd>布尔值。</dd></div><div class="api-property"><dt><code>nullValue</code> <small>string or null · 可选</small></dt><dd>空值标记，固定为 <code>NULL_VALUE</code>。</dd></div><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>同一 JSON Path 是否还有后续增量。</dd></div></details><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>是否还有本次函数调用的后续增量。</dd></div></details><details><summary><code>functionResponse</code> <small>FunctionResponse or null · 可选</small><span class="api-field-description">函数调用结果；仅在相应工具续接流程中使用。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 functionCall.id。</dd></div><div class="api-property"><dt><code>name</code> <small>string or null · 可选</small></dt><dd>对应函数名称。</dd></div><div class="api-property"><dt><code>response</code> <small>object or null · 可选</small></dt><dd>工具结果 JSON 对象；可用 output 表示输出、error 表示错误；未提供这两个键时整个对象作为输出。</dd></div><details><summary><code>parts[]</code> <small>FunctionResponsePart[] or null · 可选</small><span class="api-field-description">工具返回的多模态内容。</span></summary><details><summary><code>inlineData</code> <small>FunctionResponseBlob or null · 可选</small><span class="api-field-description">内联文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>媒体 MIME 类型，例如 <code>image/png</code>；提供内联文件时应填写。</dd></div><div class="api-property"><dt><code>data</code> <small>string or null · 可选</small></dt><dd>Base64 编码的文件字节；提供内联文件时应填写，不带 data URL 前缀。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称，是否被模型使用取决于提供方。</dd></div></details><details><summary><code>fileData</code> <small>FunctionResponseFileData or null · 可选</small><span class="api-field-description">URI 文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>文件 MIME 类型，例如 <code>application/pdf</code>。</dd></div><div class="api-property"><dt><code>fileUri</code> <small>string or null · 可选</small></dt><dd>文件 URI；提供文件时应填写，地址格式和读取能力取决于模型提供方。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称。</dd></div></details></details><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>非阻塞工具是否还有后续结果，其他工具忽略此值。</dd></div><div class="api-property"><dt><code>scheduling</code> <small>string or null · 可选</small></dt><dd>非阻塞工具的结果调度方式：SCHEDULING_UNSPECIFIED、SILENT、WHEN_IDLE、INTERRUPT；适用时默认 WHEN_IDLE。</dd></div></details><details><summary><code>executableCode</code> <small>ExecutableCode or null · 可选</small><span class="api-field-description">模型生成的待执行代码，不表示提交此字段就会运行代码。</span></summary><div class="api-property"><dt><code>code</code> <small>string or null · 可选</small></dt><dd>代码正文。</dd></div><div class="api-property"><dt><code>language</code> <small>string or null · 可选</small></dt><dd>LANGUAGE_UNSPECIFIED 或 PYTHON。</dd></div><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>代码执行标识。</dd></div></details><details><summary><code>codeExecutionResult</code> <small>CodeExecutionResult or null · 可选</small><span class="api-field-description">代码执行结果。</span></summary><div class="api-property"><dt><code>outcome</code> <small>string or null · 可选</small></dt><dd>OUTCOME_UNSPECIFIED、OUTCOME_OK、OUTCOME_FAILED 或 OUTCOME_DEADLINE_EXCEEDED。</dd></div><div class="api-property"><dt><code>output</code> <small>string or null · 可选</small></dt><dd>执行输出或错误说明。</dd></div><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 executableCode.id。</dd></div></details><div class="api-property"><dt><code>thought</code> <small>boolean or null · 可选</small></dt><dd>标记模型思考内容；普通用户消息无需设置。</dd></div><div class="api-property"><dt><code>thoughtSignature</code> <small>string or null · 可选</small></dt><dd>Base64 编码的不透明思考签名；如需回传应原样保留。</dd></div><details><summary><code>videoMetadata</code> <small>VideoMetadata or null · 可选</small><span class="api-field-description">配合 inlineData 或 fileData 中的视频使用。</span></summary><div class="api-property"><dt><code>startOffset</code> <small>string or null · 可选</small></dt><dd>视频开始偏移，例如 <code>1.5s</code>。</dd></div><div class="api-property"><dt><code>endOffset</code> <small>string or null · 可选</small></dt><dd>视频结束偏移。</dd></div><div class="api-property"><dt><code>fps</code> <small>number or null · 可选</small></dt><dd>采样帧率；提供方支持时默认 1.0，范围大于 0 且不超过 24。</dd></div></details><details><summary><code>mediaResolution</code> <small>PartMediaResolution or null · 可选</small><span class="api-field-description">输入媒体的分辨率配置，具体能力取决于模型提供方。</span></summary><div class="api-property"><dt><code>level</code> <small>string or null · 可选</small></dt><dd>媒体质量枚举，例如 MEDIA_RESOLUTION_LOW、MEDIA_RESOLUTION_MEDIUM、MEDIA_RESOLUTION_HIGH。</dd></div><div class="api-property"><dt><code>numTokens</code> <small>integer or null · 可选</small></dt><dd>媒体 tokenization 所需序列长度。</dd></div></details><details><summary><code>toolCall</code> <small>ToolCall or null · 可选</small><span class="api-field-description">服务端工具调用，通常由模型产生。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>工具调用标识。</dd></div><div class="api-property"><dt><code>toolType</code> <small>string or null · 可选</small></dt><dd>提供方定义的 ToolType 枚举，例如 GOOGLE_SEARCH_WEB、URL_CONTEXT。</dd></div><div class="api-property"><dt><code>args</code> <small>object or null · 可选</small></dt><dd>由该工具定义的参数对象。</dd></div></details><details><summary><code>toolResponse</code> <small>ToolResponse or null · 可选</small><span class="api-field-description">服务端工具调用结果。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 toolCall.id。</dd></div><div class="api-property"><dt><code>toolType</code> <small>string or null · 可选</small></dt><dd>对应 toolCall.toolType。</dd></div><div class="api-property"><dt><code>response</code> <small>object or null · 可选</small></dt><dd>工具结果对象。</dd></div></details><div class="api-property"><dt><code>partMetadata</code> <small>object or null · 可选</small></dt><dd>分片附加元数据，键由业务约定，支持情况取决于提供方。</dd></div><details><summary><code>audioTranscription</code> <small>Transcription or null · 可选</small><span class="api-field-description">音频转写输出字段，普通输入无需构造。</span></summary><div class="api-property"><dt><code>text</code> <small>string or null · 可选</small></dt><dd>转写文本。</dd></div><div class="api-property"><dt><code>finished</code> <small>boolean or null · 可选</small></dt><dd>转写是否结束。</dd></div><div class="api-property"><dt><code>languageCode</code> <small>string or null · 可选</small></dt><dd>BCP-47 语言代码。</dd></div><div class="api-property"><dt><code>speakerLabel</code> <small>string or null · 可选</small></dt><dd>说话人标识。</dd></div><details><summary><code>words[]</code> <small>WordInfo[] or null · 可选</small><span class="api-field-description">逐词转写与时间。</span></summary><div class="api-property"><dt><code>word</code> <small>string or null · 可选</small></dt><dd>单词文本。</dd></div><div class="api-property"><dt><code>startOffset</code> <small>string or null · 可选</small></dt><dd>相对音频开始的时间偏移。</dd></div><div class="api-property"><dt><code>endOffset</code> <small>string or null · 可选</small></dt><dd>相对音频开始的结束偏移。</dd></div></details></details></details></details><div class="api-property"><dt><code>appName</code> <small>string or null · 可选</small></dt><dd>应为 <code>harness_agent</code>；兼容输入 <code>app_name</code>。</dd></div><div class="api-property"><dt><code>streaming</code> <small>boolean · 可选</small></dt><dd>是否要求模型流式生成。请求级 Harness 适配器在省略时选择流式；建议调用方显式传值。</dd></div><div class="api-property"><dt><code>stateDelta</code> <small>object or null · 可选</small></dt><dd>本轮执行前合并到 Session 的状态增量；兼容输入 <code>state_delta</code>。不得修改三个绑定 ID、<code>harnessVersion</code> 或 <code>fileIds</code>，也不得通过对应下划线名称修改。</dd></div><div class="api-property"><dt><code>functionCallEventId</code> <small>string or null · 可选</small></dt><dd>续接函数调用时对应的事件 ID。</dd></div><div class="api-property"><dt><code>invocationId</code> <small>string or null · 可选</small></dt><dd>调用标识；省略时由服务端生成。</dd></div><div class="api-property"><dt><code>customMetadata</code> <small>object or null · 可选</small></dt><dd>调用方自定义元数据。</dd></div><div class="api-property"><dt><code>max_llm_calls</code> <small>int or null · 可选</small></dt><dd>最大模型调用次数，最小值为 <code>1</code>。</dd></div></dl><details><summary><code>resources</code> <small>array · 可选</small></summary><p>兼容路径将顶层资源传入 <code>harness.resources</code>，同时提供时顶层值优先。显式空数组表示本轮清空。省略两处资源时，优先使用会话保存的非空 Skill 包，绑定会话其次使用内存快照。</p><details><summary><code>openviking_context</code> <small>资源条目</small></summary><dl><div class="api-property"><dt><code>type</code> <small>string · 必填</small></dt><dd>资源类型；MemoryStore 展开后的运行时快照固定为 openviking_context。</dd></div><div class="api-property"><dt><code>usage</code> <small>string · 必填</small></dt><dd>资源用途；长期记忆固定为 memory。</dd></div><div class="api-property"><dt><code>source</code> <small>string or null · 可选</small></dt><dd>资源来源；由 AgentKit MemoryStore 展开时为 memory_store。</dd></div><div class="api-property"><dt><code>memory_store_id</code> <small>string or null · 可选</small></dt><dd>AgentKit MemoryStore ID，仅作为已冻结快照的来源标识；Runtime 不使用该字段回查 AgentKit。</dd></div><div class="api-property"><dt><code>context_id</code> <small>string · 必填</small></dt><dd>OpenViking Context ID，必须以 ov- 开头。</dd></div><div class="api-property"><dt><code>path</code> <small>string or null · 可选</small></dt><dd>OpenViking 路径类型；长期记忆只允许 memories，省略时按 memories 处理。</dd></div><div class="api-property"><dt><code>store_path</code> <small>string or null · 可选</small></dt><dd>MemoryStore 在 OpenViking memories 下的目录段；由 AgentKit 创建 Session 时冻结。</dd></div><div class="api-property"><dt><code>root_uri</code> <small>string or null · 可选</small></dt><dd>MemoryStore 根 URI，例如 viking://.../memories/{store_path}/；用于运行时定位和审计。</dd></div><div class="api-property"><dt><code>peer</code> <small>object or null · 可选</small></dt><dd>OpenViking 读写的 peer 配置；省略时使用当前用户派生 peer。</dd></div><div class="api-property"><dt><code>peer.mode</code> <small>current_user or explicit · 可选</small></dt><dd>peer 解析模式；current_user 表示 Runtime 按 userId 派生，explicit 表示使用 peer_id。</dd></div><div class="api-property"><dt><code>peer.peer_id</code> <small>string or null · 可选</small></dt><dd>mode=explicit 时必填；必须是安全路径段。</dd></div><div class="api-property"><dt><code>credential_ref</code> <small>object · 必填</small></dt><dd>OpenViking 凭证引用；只允许 Identity API key provider 引用，不允许明文 api_key、token、cookie 或 secret。</dd></div><div class="api-property"><dt><code>credential_ref.type</code> <small>string · 必填</small></dt><dd>固定为 identity_api_key_provider。</dd></div><div class="api-property"><dt><code>credential_ref.Name</code> <small>string · 必填</small></dt><dd>Identity API key provider 名称，例如 openviking-user-key。</dd></div><div class="api-property"><dt><code>credential_ref.PoolName</code> <small>string · 必填</small></dt><dd>Identity API key provider 池名称，例如 default。</dd></div><div class="api-property"><dt><code>access</code> <small>read_only or read_write · 可选</small></dt><dd>访问模式；默认 read_only，只召回不自动保存；read_write 会启用 write_memory 和会话后保存。</dd></div></dl></details><details><summary><code>external_skill_package</code> <small>资源条目</small></summary><dl><div class="api-property"><dt><code>type</code> <small>string · 必填</small></dt><dd>资源类型；外部公开 Skill 包固定为 <code>external_skill_package</code>。</dd></div><div class="api-property"><dt><code>source</code> <small>string · 可选</small></dt><dd>外部公开 Skill 包使用 <code>public_url</code>。省略时按 <code>public_url</code> 处理。</dd></div><div class="api-property"><dt><code>url</code> <small>string · 必填</small></dt><dd>外部公开 Skill zip 下载链接。Runtime 下载并校验 zip 后读取 <code>SKILL.md</code>，将 Skill 的 <code>name</code> 和 <code>description</code> 注入 system prompt，并挂载为 ADK <code>SkillToolset</code>。</dd></div></dl></details></details></section><aside><h4>请求示例</h4><pre><code>{
+<div class="api-contract"><section><h4>请求体</h4><dl><div class="api-property"><dt><code>harnessVersion</code> <small>integer · 可选</small></dt><dd>续聊通常省略；显式提供时必须是正整数且与 Session 固定版本一致，不能用它切换版本。与 <code>refreshSnapshot: true</code> 互斥。</dd></div><div class="api-property"><dt><code>refreshSnapshot</code> <small>boolean · 可选 · 默认值 false</small></dt><dd>传 true 时，用原绑定获取最新 Harness 和当前 Environment，成功后持久化实际版本、替换快照并执行本轮。字符串和 null 返回 422。</dd></div></dl><details open><summary><code>harness</code> <small>object · 可选</small><span class="api-field-description">设置本轮 Harness Agent 使用的模型、指令和工具。</span></summary><dl><div class="api-property"><dt><code>model_name</code> <small>string · 可选</small></dt><dd>模型名称；绑定会话省略时沿用快照，未绑定时沿用部署配置。</dd></div><div class="api-property"><dt><code>model_effort</code> <small>string or null · 可选</small></dt><dd>ADK 模型推理强度：low、medium、high、xhigh、max。省略沿用快照，显式 null 清除继承值。非空值要求 ADK 直接模型调用，模型本身须支持所选等级。</dd></div><div class="api-property"><dt><code>system_prompt</code> <small>string · 可选</small></dt><dd>系统提示词。</dd></div></dl><details open><summary><code>tools</code> <small>string or object[] · 可选</small><span class="api-field-description">逗号分隔的名称（如 grep,read），或按名称选择工具的对象数组。</span></summary><dl><div class="api-property"><dt><code>tool_name</code> <small>string · 数组元素必填</small></dt><dd>每项填写一个非空名称，不能含逗号。数组支持 bash、read、edit、write、glob、grep、web_fetch、web_search。其他名称被过滤，重复名称按首次出现顺序保留。</dd></div></dl></details><dl><div class="api-property"><dt><code>mcp_service_ids</code> <small>string[] · 可选</small></dt><dd>仅用于绑定会话。省略沿用默认服务，[] 仅本轮禁用。ID 去除首尾空白后按序去重。缺少用户或会话标识返回 409；已定位但未绑定的会话、null、空白元素、与 mcp_servers 同传或与非空 mcp_toolset_id 同传均返回 422。</dd></div><div class="api-property"><dt><code>skills</code> <small>string · 可选</small></dt><dd>逗号分隔的 Skill Hub slug、Space ID 或 Space:Skill 引用。</dd></div><div class="api-property"><dt><code>runtime</code> <small><code>adk</code> or <code>codex</code> · 可选</small></dt><dd>默认 <code>adk</code>。</dd></div><div class="api-property"><dt><code>max_llm_calls</code> <small>int or null · 可选</small></dt><dd>最大模型调用次数，最小值为 <code>1</code>。</dd></div><div class="api-property"><dt><code>model_provider</code> <small>string · 可选</small></dt><dd>模型提供方；绑定会话省略时沿用快照，未绑定时沿用部署配置。</dd></div><div class="api-property"><dt><code>model_api_base</code> <small>string · 可选</small></dt><dd>模型 API 地址；不得指向链路本地或云元数据地址。</dd></div><div class="api-property"><dt><code>model_api_key</code> <small>string · 可选</small></dt><dd>模型 API 密钥。仅用于兼容历史调用方，新调用方应改用 <code>X-Model-API-Key</code>；两者同时提供时以 Header 为准。</dd></div><div class="api-property"><dt><code>mcp_toolset_id</code> <small>string · 可选</small></dt><dd>MCP ToolSet ID，只能选一个，而且是本账号下的。</dd></div></dl><details><summary><code>mcp_servers</code> <small>McpServer[]</small></summary><dl><div class="api-property"><dt><code>protocol</code> <small><code>streamable-http</code> or <code>sse</code> · 可选</small></dt><dd>默认 <code>streamable-http</code>。</dd></div><div class="api-property"><dt><code>endpoint</code> <small>string · 必填</small></dt><dd>HTTP(S) 地址，不允许 userinfo 或 fragment。</dd></div><div class="api-property"><dt><code>api_key</code> <small>string or null · 可选</small></dt><dd>MCP 认证密钥。</dd></div><div class="api-property"><dt><code>api_key_header</code> <small>string · 可选</small></dt><dd>默认 Authorization。可指定合法 HTTP Header 名。</dd></div><div class="api-property"><dt><code>api_key_bearer</code> <small>boolean · 可选</small></dt><dd>默认 true；使用 Authorization 时自动添加 Bearer 前缀，false 时直接发送密钥。</dd></div></dl></details><details><summary><code>knowledgebase</code> <small>object or null</small></summary><dl><div class="api-property"><dt><code>index</code> <small>string or null · 可选</small></dt><dd>知识库索引；长度不超过 <code>128</code>，仅允许字母、数字、下划线、点和连字符。</dd></div><div class="api-property"><dt><code>type</code> <small>string or null · 可选</small></dt><dd><code>local</code>、<code>opensearch</code>、<code>redis</code>、<code>milvus</code>、<code>tos_vector</code>、<code>viking</code>、<code>context_search</code> 或 <code>openviking</code>。</dd></div></dl></details><details><summary><code>sandbox</code> <small>object or null</small></summary><dl><div class="api-property"><dt><code>tool_id</code> <small>string or null · 可选</small></dt><dd>Sandbox Tool ID；部署设置 allowlist 时必须在 allowlist 内。绑定会话不能改为快照之外的 Tool ID，否则返回 422；调整 TTL 时省略此字段。</dd></div><div class="api-property"><dt><code>ttl</code> <small>int or null · 可选</small></dt><dd>Session TTL，范围 <code>60</code>–<code>86400</code> 秒。</dd></div></dl></details><dl><div class="api-property"><dt><code>registry_space_id</code> <small>string · 可选</small></dt><dd>A2A Registry Space 标识。</dd></div><div class="api-property"><dt><code>registry_endpoint</code> <small>string · 可选</small></dt><dd>A2A Registry 地址。</dd></div><div class="api-property"><dt><code>registry_region</code> <small>string · 可选</small></dt><dd>A2A Registry 区域。</dd></div><div class="api-property"><dt><code>registry_top_k</code> <small>int · 可选</small></dt><dd>Registry 返回数量，最小值为 <code>1</code>，默认 <code>3</code>。</dd></div></dl><dl><div class="api-property"><dt><code>resources</code> <small>object[] · 可选</small></dt><dd>与下方顶层 resources 使用相同的资源对象结构。两处同时传入时，顶层值优先；显式空数组清空本轮资源。</dd></div></dl></details><dl><div class="api-property"><dt><code>userId</code> <small>string · 必填</small></dt><dd>用户标识；兼容输入 <code>user_id</code>；身份模式下服务端使用认证主体覆盖该值。</dd></div><div class="api-property"><dt><code>sessionId</code> <small>string · 必填</small></dt><dd>已创建的会话标识；兼容输入 <code>session_id</code>。</dd></div><details open><summary><code>newMessage</code> <small>Content or null · 可选</small><span class="api-field-description">本轮输入消息；兼容输入 <code>new_message</code>。普通文本使用 <code>role: user</code> 和 <code>parts[].text</code>。嵌套字段使用下列 camelCase 名称，也兼容 SDK 的 snake_case 名称（如 inline_data、mime_type）。字段可被请求模型接受不代表所有模型提供方都支持相应能力。</span></summary><div class="api-property"><dt><code>role</code> <small>string or null · 可选</small></dt><dd>消息角色：<code>user</code> 或 <code>model</code>；本轮用户输入应为 <code>user</code>。</dd></div><details><summary><code>parts[]</code> <small>Part[] or null · 可选</small><span class="api-field-description">按顺序组成消息的分片。每个分片选择一种内容类型，文本和文件组合时分别放入数组元素；下列类型允许省略/null，具体内容约束由模型和工具协议决定。</span></summary><div class="api-property"><dt><code>text</code> <small>string or null · 可选</small></dt><dd>文本内容。普通对话通常只需填写此字段。</dd></div><details><summary><code>inlineData</code> <small>Blob or null · 可选</small><span class="api-field-description">内联图片、音频或其他二进制文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>媒体 MIME 类型，例如 <code>image/png</code>；提供内联文件时应填写。</dd></div><div class="api-property"><dt><code>data</code> <small>string or null · 可选</small></dt><dd>Base64 编码的文件字节；提供内联文件时应填写，不带 data URL 前缀。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称，是否被模型使用取决于提供方。</dd></div></details><details><summary><code>fileData</code> <small>FileData or null · 可选</small><span class="api-field-description">通过 URI 引用文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>文件 MIME 类型，例如 <code>application/pdf</code>。</dd></div><div class="api-property"><dt><code>fileUri</code> <small>string or null · 可选</small></dt><dd>文件 URI；提供文件时应填写，地址格式和读取能力取决于模型提供方。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称。</dd></div></details><details><summary><code>functionCall</code> <small>FunctionCall or null · 可选</small><span class="api-field-description">模型产生的函数调用。普通用户输入不需要构造此对象。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>函数调用标识；返回结果时用同一 ID 关联。</dd></div><div class="api-property"><dt><code>name</code> <small>string or null · 可选</small></dt><dd>函数名称。</dd></div><div class="api-property"><dt><code>args</code> <small>object or null · 可选</small></dt><dd>函数参数 JSON 对象，键由对应工具定义。</dd></div><details><summary><code>partialArgs[]</code> <small>PartialArg[] or null · 可选</small><span class="api-field-description">增量函数参数，是否支持取决于提供方。</span></summary><div class="api-property"><dt><code>jsonPath</code> <small>string or null · 可选</small></dt><dd>增量参数的 JSON Path，例如 <code>$.query</code>。</dd></div><div class="api-property"><dt><code>stringValue</code> <small>string or null · 可选</small></dt><dd>字符串值。</dd></div><div class="api-property"><dt><code>numberValue</code> <small>number or null · 可选</small></dt><dd>数值。</dd></div><div class="api-property"><dt><code>boolValue</code> <small>boolean or null · 可选</small></dt><dd>布尔值。</dd></div><div class="api-property"><dt><code>nullValue</code> <small>string or null · 可选</small></dt><dd>空值标记，固定为 <code>NULL_VALUE</code>。</dd></div><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>同一 JSON Path 是否还有后续增量。</dd></div></details><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>是否还有本次函数调用的后续增量。</dd></div></details><details><summary><code>functionResponse</code> <small>FunctionResponse or null · 可选</small><span class="api-field-description">函数调用结果；仅在相应工具续接流程中使用。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 functionCall.id。</dd></div><div class="api-property"><dt><code>name</code> <small>string or null · 可选</small></dt><dd>对应函数名称。</dd></div><div class="api-property"><dt><code>response</code> <small>object or null · 可选</small></dt><dd>工具结果 JSON 对象；可用 output 表示输出、error 表示错误；未提供这两个键时整个对象作为输出。</dd></div><details><summary><code>parts[]</code> <small>FunctionResponsePart[] or null · 可选</small><span class="api-field-description">工具返回的多模态内容。</span></summary><details><summary><code>inlineData</code> <small>FunctionResponseBlob or null · 可选</small><span class="api-field-description">内联文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>媒体 MIME 类型，例如 <code>image/png</code>；提供内联文件时应填写。</dd></div><div class="api-property"><dt><code>data</code> <small>string or null · 可选</small></dt><dd>Base64 编码的文件字节；提供内联文件时应填写，不带 data URL 前缀。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称，是否被模型使用取决于提供方。</dd></div></details><details><summary><code>fileData</code> <small>FunctionResponseFileData or null · 可选</small><span class="api-field-description">URI 文件。</span></summary><div class="api-property"><dt><code>mimeType</code> <small>string or null · 可选</small></dt><dd>文件 MIME 类型，例如 <code>application/pdf</code>。</dd></div><div class="api-property"><dt><code>fileUri</code> <small>string or null · 可选</small></dt><dd>文件 URI；提供文件时应填写，地址格式和读取能力取决于模型提供方。</dd></div><div class="api-property"><dt><code>displayName</code> <small>string or null · 可选</small></dt><dd>文件显示名称。</dd></div></details></details><div class="api-property"><dt><code>willContinue</code> <small>boolean or null · 可选</small></dt><dd>非阻塞工具是否还有后续结果，其他工具忽略此值。</dd></div><div class="api-property"><dt><code>scheduling</code> <small>string or null · 可选</small></dt><dd>非阻塞工具的结果调度方式：SCHEDULING_UNSPECIFIED、SILENT、WHEN_IDLE、INTERRUPT；适用时默认 WHEN_IDLE。</dd></div></details><details><summary><code>executableCode</code> <small>ExecutableCode or null · 可选</small><span class="api-field-description">模型生成的待执行代码，不表示提交此字段就会运行代码。</span></summary><div class="api-property"><dt><code>code</code> <small>string or null · 可选</small></dt><dd>代码正文。</dd></div><div class="api-property"><dt><code>language</code> <small>string or null · 可选</small></dt><dd>LANGUAGE_UNSPECIFIED 或 PYTHON。</dd></div><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>代码执行标识。</dd></div></details><details><summary><code>codeExecutionResult</code> <small>CodeExecutionResult or null · 可选</small><span class="api-field-description">代码执行结果。</span></summary><div class="api-property"><dt><code>outcome</code> <small>string or null · 可选</small></dt><dd>OUTCOME_UNSPECIFIED、OUTCOME_OK、OUTCOME_FAILED 或 OUTCOME_DEADLINE_EXCEEDED。</dd></div><div class="api-property"><dt><code>output</code> <small>string or null · 可选</small></dt><dd>执行输出或错误说明。</dd></div><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 executableCode.id。</dd></div></details><div class="api-property"><dt><code>thought</code> <small>boolean or null · 可选</small></dt><dd>标记模型思考内容；普通用户消息无需设置。</dd></div><div class="api-property"><dt><code>thoughtSignature</code> <small>string or null · 可选</small></dt><dd>Base64 编码的不透明思考签名；如需回传应原样保留。</dd></div><details><summary><code>videoMetadata</code> <small>VideoMetadata or null · 可选</small><span class="api-field-description">配合 inlineData 或 fileData 中的视频使用。</span></summary><div class="api-property"><dt><code>startOffset</code> <small>string or null · 可选</small></dt><dd>视频开始偏移，例如 <code>1.5s</code>。</dd></div><div class="api-property"><dt><code>endOffset</code> <small>string or null · 可选</small></dt><dd>视频结束偏移。</dd></div><div class="api-property"><dt><code>fps</code> <small>number or null · 可选</small></dt><dd>采样帧率；提供方支持时默认 1.0，范围大于 0 且不超过 24。</dd></div></details><details><summary><code>mediaResolution</code> <small>PartMediaResolution or null · 可选</small><span class="api-field-description">输入媒体的分辨率配置，具体能力取决于模型提供方。</span></summary><div class="api-property"><dt><code>level</code> <small>string or null · 可选</small></dt><dd>媒体质量枚举，例如 MEDIA_RESOLUTION_LOW、MEDIA_RESOLUTION_MEDIUM、MEDIA_RESOLUTION_HIGH。</dd></div><div class="api-property"><dt><code>numTokens</code> <small>integer or null · 可选</small></dt><dd>媒体 tokenization 所需序列长度。</dd></div></details><details><summary><code>toolCall</code> <small>ToolCall or null · 可选</small><span class="api-field-description">服务端工具调用，通常由模型产生。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>工具调用标识。</dd></div><div class="api-property"><dt><code>toolType</code> <small>string or null · 可选</small></dt><dd>提供方定义的 ToolType 枚举，例如 GOOGLE_SEARCH_WEB、URL_CONTEXT。</dd></div><div class="api-property"><dt><code>args</code> <small>object or null · 可选</small></dt><dd>由该工具定义的参数对象。</dd></div></details><details><summary><code>toolResponse</code> <small>ToolResponse or null · 可选</small><span class="api-field-description">服务端工具调用结果。</span></summary><div class="api-property"><dt><code>id</code> <small>string or null · 可选</small></dt><dd>对应 toolCall.id。</dd></div><div class="api-property"><dt><code>toolType</code> <small>string or null · 可选</small></dt><dd>对应 toolCall.toolType。</dd></div><div class="api-property"><dt><code>response</code> <small>object or null · 可选</small></dt><dd>工具结果对象。</dd></div></details><div class="api-property"><dt><code>partMetadata</code> <small>object or null · 可选</small></dt><dd>分片附加元数据，键由业务约定，支持情况取决于提供方。</dd></div><details><summary><code>audioTranscription</code> <small>Transcription or null · 可选</small><span class="api-field-description">音频转写输出字段，普通输入无需构造。</span></summary><div class="api-property"><dt><code>text</code> <small>string or null · 可选</small></dt><dd>转写文本。</dd></div><div class="api-property"><dt><code>finished</code> <small>boolean or null · 可选</small></dt><dd>转写是否结束。</dd></div><div class="api-property"><dt><code>languageCode</code> <small>string or null · 可选</small></dt><dd>BCP-47 语言代码。</dd></div><div class="api-property"><dt><code>speakerLabel</code> <small>string or null · 可选</small></dt><dd>说话人标识。</dd></div><details><summary><code>words[]</code> <small>WordInfo[] or null · 可选</small><span class="api-field-description">逐词转写与时间。</span></summary><div class="api-property"><dt><code>word</code> <small>string or null · 可选</small></dt><dd>单词文本。</dd></div><div class="api-property"><dt><code>startOffset</code> <small>string or null · 可选</small></dt><dd>相对音频开始的时间偏移。</dd></div><div class="api-property"><dt><code>endOffset</code> <small>string or null · 可选</small></dt><dd>相对音频开始的结束偏移。</dd></div></details></details></details></details><div class="api-property"><dt><code>appName</code> <small>string or null · 可选</small></dt><dd>应为 <code>harness_agent</code>；兼容输入 <code>app_name</code>。</dd></div><div class="api-property"><dt><code>streaming</code> <small>boolean · 可选</small></dt><dd>是否要求模型流式生成。请求级 Harness 适配器在省略时选择流式；建议调用方显式传值。</dd></div><div class="api-property"><dt><code>stateDelta</code> <small>object or null · 可选</small></dt><dd>本轮执行前合并到 Session 的状态增量；兼容输入 <code>state_delta</code>。不得修改三个绑定 ID、<code>harnessVersion</code> 或 <code>fileIds</code>，也不得通过对应下划线名称修改。</dd></div><div class="api-property"><dt><code>functionCallEventId</code> <small>string or null · 可选</small></dt><dd>续接函数调用时对应的事件 ID。</dd></div><div class="api-property"><dt><code>invocationId</code> <small>string or null · 可选</small></dt><dd>调用标识；省略时由服务端生成。</dd></div><div class="api-property"><dt><code>customMetadata</code> <small>object or null · 可选</small></dt><dd>调用方自定义元数据。</dd></div><div class="api-property"><dt><code>max_llm_calls</code> <small>int or null · 可选</small></dt><dd>最大模型调用次数，最小值为 <code>1</code>。</dd></div></dl><details><summary><code>resources</code> <small>array · 可选</small></summary><p>兼容路径将顶层资源传入 <code>harness.resources</code>，同时提供时顶层值优先。显式空数组表示本轮清空。省略两处资源时，优先使用会话保存的非空 Skill 包，绑定会话其次使用内存快照。</p><details><summary><code>openviking_context</code> <small>资源条目</small></summary><dl><div class="api-property"><dt><code>type</code> <small>string · 必填</small></dt><dd>资源类型；MemoryStore 展开后的运行时快照固定为 openviking_context。</dd></div><div class="api-property"><dt><code>usage</code> <small>string · 必填</small></dt><dd>资源用途；长期记忆固定为 memory。</dd></div><div class="api-property"><dt><code>source</code> <small>string or null · 可选</small></dt><dd>资源来源；由 AgentKit MemoryStore 展开时为 memory_store。</dd></div><div class="api-property"><dt><code>memory_store_id</code> <small>string or null · 可选</small></dt><dd>AgentKit MemoryStore ID，仅作为已冻结快照的来源标识；Runtime 不使用该字段回查 AgentKit。</dd></div><div class="api-property"><dt><code>context_id</code> <small>string · 必填</small></dt><dd>OpenViking Context ID，必须以 ov- 开头。</dd></div><div class="api-property"><dt><code>path</code> <small>string or null · 可选</small></dt><dd>OpenViking 路径类型；长期记忆只允许 memories，省略时按 memories 处理。</dd></div><div class="api-property"><dt><code>store_path</code> <small>string or null · 可选</small></dt><dd>MemoryStore 在 OpenViking memories 下的目录段；由 AgentKit 创建 Session 时冻结。</dd></div><div class="api-property"><dt><code>root_uri</code> <small>string or null · 可选</small></dt><dd>MemoryStore 根 URI，例如 viking://.../memories/{store_path}/；用于运行时定位和审计。</dd></div><div class="api-property"><dt><code>peer</code> <small>object or null · 可选</small></dt><dd>OpenViking 读写的 peer 配置；省略时使用当前用户派生 peer。</dd></div><div class="api-property"><dt><code>peer.mode</code> <small>current_user or explicit · 可选</small></dt><dd>peer 解析模式；current_user 表示 Runtime 按 userId 派生，explicit 表示使用 peer_id。</dd></div><div class="api-property"><dt><code>peer.peer_id</code> <small>string or null · 可选</small></dt><dd>mode=explicit 时必填；必须是安全路径段。</dd></div><div class="api-property"><dt><code>credential_ref</code> <small>object · 必填</small></dt><dd>OpenViking 凭证引用；只允许 Identity API key provider 引用，不允许明文 api_key、token、cookie 或 secret。</dd></div><div class="api-property"><dt><code>credential_ref.type</code> <small>string · 必填</small></dt><dd>固定为 identity_api_key_provider。</dd></div><div class="api-property"><dt><code>credential_ref.Name</code> <small>string · 必填</small></dt><dd>Identity API key provider 名称，例如 openviking-user-key。</dd></div><div class="api-property"><dt><code>credential_ref.PoolName</code> <small>string · 必填</small></dt><dd>Identity API key provider 池名称，例如 default。</dd></div><div class="api-property"><dt><code>access</code> <small>read_only or read_write · 可选</small></dt><dd>访问模式；默认 read_only，只召回不自动保存；read_write 会启用 write_memory 和会话后保存。</dd></div></dl></details><details><summary><code>external_skill_package</code> <small>资源条目</small></summary><dl><div class="api-property"><dt><code>type</code> <small>string · 必填</small></dt><dd>资源类型；外部公开 Skill 包固定为 <code>external_skill_package</code>。</dd></div><div class="api-property"><dt><code>source</code> <small>string · 可选</small></dt><dd>外部公开 Skill 包使用 <code>public_url</code>。省略时按 <code>public_url</code> 处理。</dd></div><div class="api-property"><dt><code>url</code> <small>string · 必填</small></dt><dd>外部公开 Skill zip 下载链接。Runtime 下载并校验 zip 后读取 <code>SKILL.md</code>，将 Skill 的 <code>name</code> 和 <code>description</code> 注入 system prompt，并挂载为 ADK <code>SkillToolset</code>。</dd></div></dl></details></details></section><aside><h4>请求示例</h4><pre><code>{
   &quot;appName&quot;: &quot;harness_agent&quot;,
   &quot;userId&quot;: &quot;reader-1&quot;,
   &quot;sessionId&quot;: &quot;report-1&quot;,
@@ -119,31 +93,13 @@ Content-Type: application/json
   &quot;streaming&quot;: true,
   &quot;refreshSnapshot&quot;: true,
   &quot;harness&quot;: {
+    &quot;model_effort&quot;: &quot;medium&quot;,
+    &quot;tools&quot;: [{&quot;tool_name&quot;: &quot;grep&quot;}],
+    &quot;mcp_service_ids&quot;: [&quot;m-orders&quot;],
     &quot;system_prompt&quot;: &quot;用三条要点回复。&quot;,
     &quot;max_llm_calls&quot;: 3
   }
 }</code></pre></aside></div>
-
-#### MCP 配置示例
-
-以下为完整请求体，展示同一数组中的两种元素格式。订单服务使用连接字段，`inventory` 使用 Harness 标准字段；每个服务使用各自的认证配置。
-
-```json
-{
-  "appName": "harness_agent",
-  "userId": "reader-1",
-  "sessionId": "report-1",
-  "newMessage": {"role": "user", "parts": [{"text": "查询订单和库存。"}]},
-  "harness": {
-    "mcp_servers": [
-      {"protocol": "streamable-http", "endpoint": "https://mcp.example.com/orders", "api_key": "<orders-key>"},
-      {"Name": "inventory", "Type": "url", "Url": "https://mcp.example.com/inventory", "headers": {"X-API-KEY": "<inventory-key>", "X-Tenant-ID": "tenant-a"}}
-    ]
-  }
-}
-```
-
-同一元素同时提供 `endpoint` 和 `Url`，或同时提供 `api_key` 和 `headers`，均在 SSE 建连前返回 HTTP 422。
 
 #### 请求头
 
@@ -171,7 +127,27 @@ data: {"partial":false,"content":{"parts":[{"text":"甲乙"}]}}
 | 提供 `harness` | 在本轮使用的快照上应用显式字段，省略的字段继承快照。sandbox、knowledgebase 对象按子字段合并，数组整体替换。若同时刷新，先取新快照。请求覆盖只对本轮有效。 |
 | 覆盖模型地址且快照含密钥 | 若 `harness.model_api_base` 与快照不同，必须显式提供本轮凭证，优先使用 `X-Model-API-Key`。即使快照已有密钥，省略本轮凭证也会在建连前返回 422。 |
 
-在 ADK 直接调用模型的链路上，`model_provider` 为 `openai` 或 `openai-responses` 时使用 Ark Responses，`openai-completions` 使用 Chat Completions。请求级 `harness.model_provider` 优先于快照的 `Model.Provider`。两个创建入口、主动刷新、SSE 和这两种模型协议已经实际验证，工具调用尚未实测。
+在 ADK 直接调用模型的链路上，`model_provider` 为 `openai` 或 `openai-responses` 时使用 Ark Responses，`openai-completions` 使用 Chat Completions。请求级 `harness.model_provider` 优先于快照的 `Model.Provider`。
+
+**直接连接 MCP 的请求示例。** 已知网关地址时，在本轮使用 `harness.mcp_servers`。此示例使用自定义认证头，并原样发送密钥值。需要按服务 ID 选择时使用上方请求体示例中的 `harness.mcp_service_ids`；两个字段同时出现会返回 422。
+
+```json
+{
+  "userId": "reader-1",
+  "sessionId": "report-1",
+  "newMessage": {"role": "user", "parts": [{"text": "查询订单"}]},
+  "streaming": true,
+  "harness": {
+    "mcp_servers": [{
+      "protocol": "streamable-http",
+      "endpoint": "https://orders.example.com/mcp",
+      "api_key_header": "X-Api-Key",
+      "api_key": "<MCP_API_KEY>",
+      "api_key_bearer": false
+    }]
+  }
+}
+```
 
 ## POST /invoke {#post-invoke}
 
@@ -219,8 +195,170 @@ RunAgentSSE 的 `harness` 使用此配置模型。A2A 不接受 `params.metadata
 
 ```json
 {
+  "$defs": {
+    "HarnessSnapshotTool": {
+      "properties": {
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_name"
+      ],
+      "title": "HarnessSnapshotTool",
+      "type": "object"
+    },
+    "KnowledgebaseOverrides": {
+      "additionalProperties": false,
+      "description": "Request-scoped knowledge base selector.\n\nOnly the index and the backend type may change per request; names,\ndescriptions, top_k, credentials and connection settings stay with the\ndeployment. Unknown fields are rejected so older clients that still send\n``top_k`` get a clear 422 instead of a silently ignored field.",
+      "properties": {
+        "index": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Index"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "enum": [
+                "local",
+                "opensearch",
+                "redis",
+                "milvus",
+                "tos_vector",
+                "viking",
+                "context_search",
+                "openviking"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        }
+      },
+      "title": "KnowledgebaseOverrides",
+      "type": "object"
+    },
+    "McpServerConfig": {
+      "additionalProperties": false,
+      "description": "Direct MCP connection settings or a gateway resolved from GetMCPToolset.",
+      "properties": {
+        "protocol": {
+          "default": "streamable-http",
+          "enum": [
+            "streamable-http",
+            "sse"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "api_key": {
+          "anyOf": [
+            {
+              "format": "password",
+              "type": "string",
+              "writeOnly": true
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Api Key"
+        },
+        "api_key_header": {
+          "default": "Authorization",
+          "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$",
+          "title": "Api Key Header",
+          "type": "string"
+        },
+        "api_key_bearer": {
+          "default": true,
+          "title": "Api Key Bearer",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "title": "McpServerConfig",
+      "type": "object"
+    },
+    "SandboxOverrides": {
+      "additionalProperties": false,
+      "description": "Request-scoped AgentKit Sandbox target.\n\n``tool_id`` selects the sandbox for this invocation and ``ttl`` tunes how\nlong its session survives. The workspace, region, credentials and the\nper-command budget are fixed by the deployment (``Execute`` always uses\nADK's 30 second limit).",
+      "properties": {
+        "tool_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Id"
+        },
+        "ttl": {
+          "anyOf": [
+            {
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ttl"
+        }
+      },
+      "title": "SandboxOverrides",
+      "type": "object"
+    }
+  },
   "description": "Fields that may be changed for one invocation without redeploying.",
   "properties": {
+    "model_effort": {
+      "anyOf": [
+        {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reasoning effort for this invocation. Omit to inherit existing configuration; explicit null clears inherited effort and uses model defaults.",
+      "title": "Model Effort"
+    },
     "model_name": {
       "default": "",
       "description": "Reasoning model name.",
@@ -245,10 +383,35 @@ RunAgentSSE 的 `harness` 使用此配置模型。A2A 不接受 `params.metadata
       "writeOnly": true
     },
     "tools": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/HarnessSnapshotTool"
+          },
+          "type": "array"
+        }
+      ],
       "default": "",
-      "description": "Comma-separated built-in tool names.",
-      "title": "Tools",
-      "type": "string"
+      "description": "Comma-separated built-in tool names; also accepts snapshot objects such as [{\"tool_name\": \"web_search\"}]. Snapshot objects use the CONFIG_AGENT_TOOLS allowlist in session_snapshot.py.",
+      "title": "Tools"
+    },
+    "mcp_service_ids": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mcp Service Ids"
     },
     "mcp_servers": {
       "description": "Optional remote MCP protocol/endpoint/api_key settings.",
@@ -352,202 +515,7 @@ RunAgentSSE 的 `harness` 使用此配置模型。A2A 不接受 `params.metadata
     }
   },
   "title": "HarnessOverrides",
-  "type": "object",
-  "$defs": {
-    "KnowledgebaseOverrides": {
-      "additionalProperties": false,
-      "description": "Request-scoped knowledge base selector.\n\nOnly the index and the backend type may change per request; names,\ndescriptions, top_k, credentials and connection settings stay with the\ndeployment. Unknown fields are rejected so older clients that still send\n``top_k`` get a clear 422 instead of a silently ignored field.",
-      "properties": {
-        "index": {
-          "anyOf": [
-            {
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Index"
-        },
-        "type": {
-          "anyOf": [
-            {
-              "enum": [
-                "local",
-                "opensearch",
-                "redis",
-                "milvus",
-                "tos_vector",
-                "viking",
-                "context_search",
-                "openviking"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Type"
-        }
-      },
-      "title": "KnowledgebaseOverrides",
-      "type": "object"
-    },
-    "McpServerConfig": {
-      "title": "McpServerConfig",
-      "description": "Choose one complete format per server. Mixed fields are rejected. 0.5.0 target contract.",
-      "oneOf": [
-        {
-          "additionalProperties": false,
-          "description": "Direct MCP connection settings or a gateway resolved from GetMCPToolset.",
-          "properties": {
-            "protocol": {
-              "default": "streamable-http",
-              "enum": [
-                "streamable-http",
-                "sse"
-              ],
-              "title": "Protocol",
-              "type": "string"
-            },
-            "endpoint": {
-              "title": "Endpoint",
-              "type": "string"
-            },
-            "api_key": {
-              "anyOf": [
-                {
-                  "format": "password",
-                  "type": "string",
-                  "writeOnly": true
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null,
-              "title": "Api Key"
-            },
-            "api_key_header": {
-              "default": "Authorization",
-              "enum": [
-                "Authorization",
-                "X-Api-Key"
-              ],
-              "title": "Api Key Header",
-              "type": "string"
-            }
-          },
-          "required": [
-            "endpoint"
-          ],
-          "title": "McpServerConfig",
-          "type": "object"
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "Name",
-            "Type",
-            "Url"
-          ],
-          "properties": {
-            "Name": {
-              "type": "string",
-              "minLength": 1
-            },
-            "Type": {
-              "type": "string",
-              "const": "url"
-            },
-            "Url": {
-              "type": "string",
-              "description": "HTTP(S) URL without userinfo or fragment."
-            },
-            "headers": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string",
-                "writeOnly": true
-              },
-              "description": "Header names and values are preserved; reject invalid names and CR/LF."
-            }
-          }
-        }
-      ]
-    },
-    "RunAgentRequest": {
-      "properties": {
-        "user_id": {
-          "title": "User Id",
-          "type": "string"
-        },
-        "session_id": {
-          "title": "Session Id",
-          "type": "string"
-        },
-        "max_llm_calls": {
-          "anyOf": [
-            {
-              "minimum": 1,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Max Llm Calls"
-        }
-      },
-      "required": [
-        "user_id",
-        "session_id"
-      ],
-      "title": "RunAgentRequest",
-      "type": "object"
-    },
-    "SandboxOverrides": {
-      "additionalProperties": false,
-      "description": "Request-scoped AgentKit Sandbox target.\n\n``tool_id`` selects the sandbox for this invocation and ``ttl`` tunes how\nlong its session survives. The workspace, region, credentials and the\nper-command budget are fixed by the deployment (``Execute`` always uses\nADK's 30 second limit).",
-      "properties": {
-        "tool_id": {
-          "anyOf": [
-            {
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Tool Id"
-        },
-        "ttl": {
-          "anyOf": [
-            {
-              "maximum": 86400,
-              "minimum": 60,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Ttl"
-        }
-      },
-      "title": "SandboxOverrides",
-      "type": "object"
-    }
-  }
+  "type": "object"
 }
 ```
 
