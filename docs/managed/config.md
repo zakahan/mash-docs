@@ -1,6 +1,6 @@
 # 配置 Harness 与会话
 
-通过控制面的 `CreateHarness` 提供模型和指令，按需关联工具、技能和 MCP 服务。保存返回的 Harness ID。创建 Session 时，字符串形式的 `agent` 会固定当时的版本；需要复现某次运行时，可以显式指定修订号。
+通过控制面的 `CreateAgent` 提供模型和指令，按需关联工具、技能和 MCP 服务。保存返回的 `AgentID`。创建 Session 时，字符串形式的 `agent` 会固定当时的版本；需要复现某次运行时，可以显式指定修订号。
 
 ```json
 {"type":"agent","id":"agent_example","version":1}
@@ -10,7 +10,7 @@
 
 ## 更新后何时生效
 
-假设 Session A 创建时固定版本 1。随后调用 `UpdateHarness` 修改指令，产生版本 2。Session A 的后续轮次继续使用版本 1；此时按 Harness ID 创建的 Session B 使用版本 2。比较两个版本时，可创建两个独立会话，使用相同输入和相同资源绑定。
+假设 Session A 创建时固定版本 1。随后调用 `UpdateAgent` 修改指令，产生版本 2。Session A 的后续轮次继续使用版本 1；此时按 `AgentID` 创建的 Session B 使用版本 2。比较两个版本时，可创建两个独立会话，使用相同输入和相同资源绑定。
 
 模型 Key Name 通过会话创建请求头传递。环境、运行时与模型凭据分别决定执行位置和模型访问身份。具体继承顺序及条件必填字段见[Session API](../api/session.md)。
 

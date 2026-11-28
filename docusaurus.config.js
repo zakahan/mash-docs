@@ -18,7 +18,7 @@ module.exports = {
     sidebarPath: './sidebars.js',
     routeBasePath: '/',
     lastVersion: 'current',
-    versions: {current: {label: 'latest（v0.5）', path: '/', banner: 'none'}, '0.5.1': {label: 'v0.5', path: '0.5.1', banner: 'none'}, '0.4.0': {label: 'v0.4', path: '0.4.0', banner: 'none'}, '0.3.1': {label: 'v0.3', path: '0.3.1', banner: 'none'}, '0.2.0': {label: 'v0.2', path: '0.2.0', banner: 'none'}},
+    versions: {current: {label: 'latest（v0.6）', path: '/', banner: 'none'}, '0.6.0': {label: 'v0.6', path: '0.6.0', banner: 'none'}, '0.5.1': {label: 'v0.5', path: '0.5.1', banner: 'none'}, '0.4.0': {label: 'v0.4', path: '0.4.0', banner: 'none'}, '0.3.1': {label: 'v0.3', path: '0.3.1', banner: 'none'}, '0.2.0': {label: 'v0.2', path: '0.2.0', banner: 'none'}},
   }}]],
   themeConfig: {navbar: {title: 'VeADK Agent Loop', items: [
     ...groups.map(([label, docId]) => ({type: 'doc', label, docId, position: 'left'})),

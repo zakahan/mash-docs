@@ -6,7 +6,7 @@
 
 ## 绑定会话怎样选择技能包
 
-创建 Harness 时可登记 `Skills`。绑定或刷新会话时，服务从 `GetHarness.Result.Skills` 读取整份列表并保存在实例内存中。发送消息时，按下表从上到下选择本轮使用的技能资源。[创建会话与发送消息](flow.md)
+创建 Agent 时可登记 `Skills`。绑定或刷新会话时，服务从 `GetAgent.Result.Skills` 读取整份列表并保存在实例内存中。发送消息时，按下表从上到下选择本轮使用的技能资源。[创建会话与发送消息](flow.md)
 
 | 来源 | 生效条件 |
 |---|---|
@@ -14,7 +14,7 @@
 | 创建会话时的 `skills` 或 `resources` | 优先取非空的 `skills`，否则取非空的兼容字段 `resources`。选中的包随会话 state 保存。 |
 | 快照的 `Skills` | 创建会话时两项均为空或省略，且本轮未覆盖时使用。显式刷新成功后采用重新读取的列表。 |
 
-例如，在 `CreateHarness` 请求中声明一个公开下载的技能包：
+例如，在 `CreateAgent` 请求中声明一个公开下载的技能包：
 
 ```json
 {"Skills":[{"Type":"external_skill_package","Source":"public_url","Url":"https://skills.example.com/report.zip"}]}

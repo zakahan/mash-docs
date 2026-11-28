@@ -13,7 +13,7 @@ MCP 将远程服务的能力提供为模型可调用的工具。应用仍然只�
 
 ## 在 Harness 中登记服务
 
-绑定会话读取的 GetHarness 响应示例：
+绑定会话读取的 `GetAgent` 响应示例：
 
 ```json
 {"McpServers":[{"MCPServiceId":"m-orders","Type":"custom"}]}

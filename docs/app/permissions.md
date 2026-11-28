@@ -38,7 +38,7 @@ Harness App 使用 Runtime 的执行身份访问模型、AgentKit 控制面、Sk
         "agentkit:ListSkillsBySpaceId",
         "agentkit:GetSkillInfo",
         "agentkit:InvokeTool",
-        "agentkit:GetHarness",
+        "agentkit:GetAgent",
         "agentkit:GetEnvironment",
         "agentkit:PauseSession",
         "agentkit:ResumeSession",
@@ -84,7 +84,7 @@ TOS 资源范围中的 `agentkit-platform-*` 表示名称以 `agentkit-platform-
 
 | 功能 | Action | 触发时机 |
 | --- | --- | --- |
-| 读取 Harness 配置和执行环境 | `agentkit:GetHarness`、`agentkit:GetEnvironment` | 创建绑定 Session、显式刷新配置，或实例按 Session 固定版本恢复快照时。 |
+| 读取 Agent 配置和执行环境 | `agentkit:GetAgent`、`agentkit:GetEnvironment` | 创建绑定 Session、显式刷新配置，或实例按 Session 固定的 `agentVersion` 恢复快照时（未绑定环境时不触发 `GetEnvironment`）。 |
 | 管理沙箱 Session | `agentkit:ListSessions`、`agentkit:CreateSession`、`agentkit:GetSession`、`agentkit:PauseSession`、`agentkit:ResumeSession`、`agentkit:DeleteSession` | 创建、查询、暂停、恢复或删除工具沙箱 Session 时；会话文件接口首次访问或重启后重新附着也会查询现有沙箱。这里的 Session 是 AgentKit 工具沙箱资源。 |
 | 解析 MCP 服务引用 | `agentkit:GetMCPService` | 创建、刷新、恢复含服务引用的绑定会话，或本轮选择尚未缓存的服务 ID 时。 |
 | 读取 MCP 和工具 | `agentkit:GetMCPToolset`、`agentkit:GetTool`、`agentkit:InvokeTool` | 按 ID 获取 MCP 工具集、查询工具或通过 AgentKit 调用工具时。直接连接已知 MCP 地址时不触发工具集查询。 |

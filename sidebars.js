@@ -13,7 +13,7 @@ module.exports = {manual: [
   {type:'category', label:'Harness App', items:[
     "app/guide",
     {type:'category', label:'实战教学', link:{type:'doc', id:'app/flow'}, items:[
-      {type:'doc', id:'app/snapshots', label:'Harness 配置与版本管理'},
+      {type:'doc', id:'app/snapshots', label:'Agent 配置与版本管理'},
       {type:'doc', id:'app/sandbox', label:'在沙箱中执行任务'},
       {type:'doc', id:'app/skills', label:'使用 Skill 完成任务'},
       {type:'doc', id:'app/mcp', label:'调用 MCP 工具'},
@@ -30,7 +30,7 @@ module.exports = {manual: [
     restSection('files','文件操作接口'),
   ]},
     {type:'category', label:'AgentKit 控制面 接口', items:[
-      {type:'doc', id:'api/harness', label:'Harness'},
+      {type:'doc', id:'api/harness', label:'Agent'},
       {type:'doc', id:'api/environment', label:'Env'},
     ]},
     restSection('session','Managed Agents API：Session 与事件')]},

@@ -15,13 +15,13 @@ Skill 为模型提供完成特定任务的说明和配套资源。将 Skill 配�
 
 准备一份可通过 HTTPS 下载的公开 Skill zip 包，包内应有合法的 `SKILL.md`。示例采用报告格式技能，要求报告按“结论、依据、待确认事项”组织。你可以用已有技能替换示例 URL，并相应修改后面的验证任务。
 
-在签名客户端调用 `UpdateHarness`，`HarnessVersion` 填当前修订号。
+在签名客户端调用 `UpdateAgent`，`AgentVersion` 填当前修订号。
 
 ```json
 {
   "WorkspaceId": "<WORKSPACE_ID>",
-  "HarnessId": "<HARNESS_ID>",
-  "HarnessVersion": 1,
+  "AgentID": "<AGENT_ID>",
+  "AgentVersion": 1,
   "Skills": [
     {
       "Type": "external_skill_package",
@@ -32,13 +32,13 @@ Skill 为模型提供完成特定任务的说明和配套资源。将 Skill 配�
 }
 ```
 
-更新成功后，响应中的 `HarnessVersion` 应增加，并回显新的 `Skills` 列表。
+更新成功后，响应中的 `AgentVersion` 应增加，并回显新的 `Skills` 列表。
 
 ```json
 {
   "Result": {
-    "HarnessId": "<HARNESS_ID>",
-    "HarnessVersion": 2,
+    "AgentID": "<AGENT_ID>",
+    "AgentVersion": 2,
     "Skills": [
       {
         "Type": "external_skill_package",
@@ -50,7 +50,7 @@ Skill 为模型提供完成特定任务的说明和配套资源。将 Skill 配�
 }
 ```
 
-**验收配置：** 新版本号大于更新前的版本号，响应中的 Skill 引用与请求一致。此时只能证明控制面保存成功，还不能证明 Runtime 已读取或模型已使用 Skill。`Skills` 是完整列表，更新时提交你希望保留的所有技能。新建 Harness 时，也可以直接把这个数组放进 `CreateHarness` 请求体。[控制面 Skill 字段](../api/harness.md#harness-element-details)
+**验收配置：** 新版本号大于更新前的版本号，响应中的 Skill 引用与请求一致。此时只能证明控制面保存成功，还不能证明 Runtime 已读取或模型已使用 Skill。`Skills` 是完整列表，更新时提交你希望保留的所有技能。新建 Agent 时，也可以直接把这个数组放进 `CreateAgent` 请求体。[控制面 Skill 字段](../api/harness.md#harness-element-details)
 
 已经将技能发布到 AgentKit 时，使用空间与技能的完整 ID。
 

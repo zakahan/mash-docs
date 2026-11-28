@@ -3,14 +3,14 @@ toc_max_heading_level: 2
 ---
 # API 调用约定
 
-本页适用于 [Harness 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [会话管理接口](app.md)、[对话调用接口](chat.md)和[文件操作接口](files.md)。
+本页适用于 [Agent 管理接口](harness.md)、[环境管理接口](environment.md) 和 [Managed Agents Session API](session.md)。控制面接口契约版本为 `2025-10-30`。Harness App 的 Runtime HTTP 接口使用自己的请求与响应协议，见 [会话管理接口](app.md)、[对话调用接口](chat.md)和[文件操作接口](files.md)。
 
 ## 认证与请求地址
 
 控制面管理接口使用账号 AK/SK 签名。由 SDK 按目标入口提供的签名服务名和地域生成认证头，不能从响应的 `Service` 推断签名服务名。示例省略 SDK 生成的认证头，凭据应在运行时提供。
 
 ```http
-POST /?Action=CreateHarness&Version=2025-10-30 HTTP/1.1
+POST /?Action=CreateAgent&Version=2025-10-30 HTTP/1.1
 Content-Type: application/json
 
 {"Name":"example-agent","Model":{"Id":"model-example"}}
@@ -21,7 +21,7 @@ Content-Type: application/json
 | 参数 | 类型 | 位置 | 是否必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- | --- |
 | Action | string | Query | 是 | — | 控制面接口名称。 |
-| Version | string | Query | 是 | — | API 日期版本 `2025-10-30`，与 Harness 配置修订号不同。 |
+| Version | string | Query | 是 | — | API 日期版本 `2025-10-30`，与资源的 `AgentVersion` 配置修订号不同。 |
 | Content-Type | string | Header | 有 JSON 正文时必填 | — | `application/json`。 |
 | x-api-key | string | Header | Session 数据面按入口认证方式提供 | — | 环境访问密钥，不是模型 API Key。其他入口支持的认证方式以部署说明为准。 |
 | x-ark-key-name | string | Header | 按 Session 接口要求 | — | 模型 API Key Name，不替代环境访问密钥或账号签名。 |
@@ -55,7 +55,7 @@ Session 数据面使用分配的 Endpoint 和环境访问密钥；HTTP 方法、
 {
   "ResponseMetadata": {
     "RequestId": "req_example",
-    "Action": "CreateHarness",
+    "Action": "CreateAgent",
     "Version": "2025-10-30",
     "Service": "ma",
     "Region": "cn-beijing",
@@ -102,3 +102,22 @@ Session REST 使用自己的错误结构；网关在请求进入服务前拒绝�
 Managed Agents 事件流成功时返回 HTTP `200` 和 `Content-Type: text/event-stream`。REST 的 `data:` 包含事件 JSON；持久化事件的 `id:` 是十进制 sequence，预览事件没有持久化 ID。
 
 保存最后消费的持久化 sequence，按 [Session 事件流](session.md#session-events-sse)传递 `after_sequence` 或 `Last-Event-ID` 恢复。预览事件不能作为重连游标，连接关闭也不代表本轮执行结束；以业务终态事件判断。
+
+## Harness App 字段命名与兼容规则 {#harness-field-naming}
+
+Harness App 的 REST 与 A2A 接口推荐使用驼峰字段名，部分会话绑定与控制字段兼容对应的下划线别名：
+
+| 推荐字段（驼峰） | 兼容别名（下划线） | 适用范围与说明 |
+| --- | --- | --- |
+| `workspaceId` | `workspace_id` | REST 会话创建、A2A `params.metadata`。 |
+| `agentId` | `agent_id` | REST 会话创建、A2A `params.metadata`。 |
+| `agentVersion` | `agent_version` | REST 会话创建、`/run_sse`、A2A `params.metadata`。 |
+| `environmentId` | `environment_id` | REST 会话创建、A2A `params.metadata`。 |
+| `refreshSnapshot` | `refresh_snapshot` | `/run_sse`、A2A `params.metadata`；新建会话不接受 `refreshSnapshot: true`。 |
+| `sessionId` | `session_id` | 仅集合创建会话入口 `POST /apps/{appName}/users/{userId}/sessions`。 |
+| `fileIds` | `file_ids` | 集合创建会话入口兼容 `file_ids`；指定 ID 的创建入口使用 `fileIds`。 |
+
+- **别名冲突**：同一请求中同时提供驼峰与下划线名称且值或类型不一致时，REST 返回 422，A2A 返回 `-32602`。
+- **状态持久化**：会话绑定、版本和文件声明均以驼峰名称保存在 `session.state` 中。
+- **单轮覆盖对象**：`/run` 与 `/run_sse` 请求体中 `harness` 对象内的单轮覆盖字段使用下划线名称（如 `model_name`、`system_prompt`、`mcp_service_ids`）。
+- **版本迁移**：0.5 到 0.6 的破坏性字段变更对照见[版本说明](../versions.md#060-changes)。

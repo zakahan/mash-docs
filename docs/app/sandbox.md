@@ -64,7 +64,7 @@ data: {"partial":false,"finishReason":"STOP","content":{"role":"model","parts":[
 已有 Ark File ID 时，可在[创建会话](../api/app.md#post-createsession)的顶层传入 `fileIds`。两个创建入口均支持，最多 100 项并按原顺序去重；非空列表要求会话绑定 ADK AIO 沙箱。ID 声明保存为 `state.fileIds`，不能通过后续状态更新替换。
 
 ```json
-{"workspaceId":"<workspace-id>","harnessId":"<harness-id>","environmentId":"<environment-id>","fileIds":["file-report","file-data"]}
+{"workspaceId":"ws-example","agentId":"agent_example","environmentId":"env_example","fileIds":["file-report","file-data"]}
 ```
 
 创建成功表示文件声明已保存。之后通过 `/run_sse` 让模型读取 `/workspace/uploads/file-report/report.pdf`（假设原文件名为 report.pdf）；首次调用沙箱工具时，Runtime 使用本轮模型 API Key 查询 Ark Files，要求文件为 `active`、`purpose=agent` 且有 HTTPS 下载地址，再向沙箱提交异步下载任务。API Key 留在 Runtime，沙箱接收文件 ID、下载地址和大小。
@@ -95,7 +95,7 @@ Harness Chat 和 OBO 的 Chat Completions 模型调用会把工具图片转换�
 
 在 [创建到对话的流程](flow.md) 中，`environmentId` 指向与 Harness 同一 Workspace 的 Active Cloud Environment。App 以服务身份调用 `GetEnvironment`，将返回的 `ToolId` 写入实例快照的 `sandbox.tool_id`。SelfHosted Environment 和缺少 ToolId 的配置在解析阶段返回 422。后续普通消息使用快照；若只想调整本轮 TTL，可以传 `"harness":{"sandbox":{"ttl":3600}}`，保留快照的 ToolId。
 
-读取 Environment 时尚未分配物理沙箱。ADK 根据最终的 ToolId 装配 AIO 工具；快照解析器读取的工具信息来自 Environment，当前实现不会逐项装配 `CreateHarness.Tools[].Configs`。下文说明模型选用工具后的执行过程。
+读取 Environment 时尚未分配物理沙箱。ADK 根据最终的 ToolId 装配 AIO 工具；`agent_toolset_20260401` 开关解析见 [内置工具、MCP 与 Skills](tools.md)。下文说明模型选用工具后的执行过程。
 
 ## 从一次对话看文件在哪里
 

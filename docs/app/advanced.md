@@ -11,7 +11,7 @@
 | 单轮消息的 harness | 当前一次执行 | 调试、临时模型选择或临时指令 |
 | Runtime 环境变量 | 新实例加载配置后 | 配置持久化、服务身份、部署默认值和基础设施 |
 
-Harness App 会把实际 `harnessVersion` 与三个资源 ID 一起写入 Session。对绑定会话，显式本轮字段优先于固定版本的快照；嵌套 sandbox 和 knowledgebase 合并子字段，列表按整体替换处理。创建时的非空 Skill 覆盖按兼容规则持续生效。修改控制面不会自动改变已有 Session 的固定版本。
+Harness App 会把实际 `agentVersion` 与绑定资源 ID 一起写入 Session。对绑定会话，显式本轮字段优先于固定版本的快照；嵌套 sandbox 和 knowledgebase 合并子字段，列表按整体替换处理。创建时的非空 Skill 覆盖按兼容规则持续生效。修改控制面不会自动改变已有 Session 的固定版本。
 
 ## 选择模型协议
 
@@ -104,7 +104,7 @@ AGENTKIT_TOOL_HOST=<目标控制面主机名>
 
 ## 会话存储与 PostgreSQL
 
-绑定会话的三个资源 ID 和实际 `harnessVersion` 随 Session state 保存；解析后的执行配置仍只缓存在处理请求的实例内存中。使用共享数据库时，另一个实例会读取固定版本并自动重建本实例的快照。显式刷新用于让 Session 采用最新 Harness 版本，不用于恢复丢失的缓存。[版本与快照](snapshots.md)
+绑定会话的资源 ID 和实际 `agentVersion` 随 Session state 保存；解析后的执行配置仍只缓存在处理请求的实例内存中。使用共享数据库时，另一个实例会读取固定版本并自动调用 `GetAgent` 重建本实例的快照。显式刷新用于让 Session 采用最新 Agent 版本，不用于恢复丢失的缓存。[版本与快照](snapshots.md)
 
 `SHORT_TERM_MEMORY_TYPE` 决定用户和会话对应的历史事件存在哪里。只设置数据库地址时，该选择项仍然使用默认值 `local`。
 
